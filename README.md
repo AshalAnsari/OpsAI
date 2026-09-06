@@ -1,8 +1,8 @@
 # OpsPilot — Operational SaaS Demo Platform
 
-OpsPilot is a **fictional** operational commerce SaaS built as a portfolio/interview project for an Applied AI Engineer assessment.
+OpsPilot is a **fictional** operational commerce SaaS: customers browse products, place demo orders, and track fulfillment; admins run catalog, orders, support, and audit from an operations console.
 
-Phase 1 delivers the operational website and backend only. A future AI assistant will call these same REST APIs as controlled tools — never the database directly.
+The platform exposes REST APIs that an AI assistant layer can call as controlled tools — never the database directly.
 
 All branding, customers, products, and credentials are synthetic.
 
@@ -303,16 +303,16 @@ Webhook endpoint: `POST /api/v1/webhooks/stripe`
 
 ---
 
-## 14. Future AI OS architecture
+## 14. AI assistant architecture (planned)
 
-The AI layer (not built yet) should:
+The AI layer should:
 
 - Authenticate with scoped credentials
 - Call these REST endpoints as tools
 - Never open a MySQL connection
 - Rely on service-layer business rules + audit logs
 
-Candidate future tools: search products, get order details, cancel eligible orders, inspect audit activity, escalate to human ops.
+Intended tools include: search products, get order details, cancel eligible orders, inspect audit activity, and escalate to human ops.
 
 ---
 
