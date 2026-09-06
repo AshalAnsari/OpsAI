@@ -1,0 +1,60 @@
+# OpsPilot — PRODUCTION stack (use later on a server)
+# Usage:
+#   docker compose -f docker-compose.yml up --build -d
+#
+# Builds from production Dockerfiles (no bind mounts / no HMR).
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: opspilot-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-opspilot}
+      MYSQL_USER: ${MYSQL_USER:-opspilot}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-opspilot}
+    volumes:
+      - opspilot_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uopspilot", "-popspilot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: opspilot-backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      APP_ENV: production
+      DATABASE_URL: mysql+pymysql://opspilot:opspilot@mysql:3306/opspilot
+      FRONTEND_URL: ${FRONTEND_URL}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+    ports:
+      - "8000:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    container_name: opspilot-frontend
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  opspilot_mysql_data:
