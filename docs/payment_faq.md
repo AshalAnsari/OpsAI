@@ -1,6 +1,6 @@
-# OpsPilot Payment FAQ
+# Harbor Dock Station Payment FAQ
 
-> OpsPilot is a fictional operational commerce demo. Answers reflect how checkout and webhooks work in this project.
+> Harbor Dock Station is a fictional operational commerce demo. Answers reflect how checkout and webhooks work in this project.
 
 **Last updated:** September 6, 2026
 
@@ -67,9 +67,9 @@ Common causes:
 
 Failed or cancelled unpaid orders are closed. Place a new order from the cart if you still want the items (stock must be available).
 
-## Are my card details stored by OpsPilot?
+## Are my card details stored by Harbor Dock Station?
 
-No. Card entry happens on Stripe Checkout (when configured). OpsPilot stores Stripe session / payment intent IDs on the order for correlation, not full card numbers.
+No. Card entry happens on Stripe Checkout (when configured). Harbor Dock Station stores Stripe session / payment intent IDs on the order for correlation, not full card numbers.
 
 ## How do refunds work?
 
@@ -77,4 +77,4 @@ See the [Refund Policy](./refund_policy.md). Paid cancellations before dispatch 
 
 ## Who can see my orders?
 
-Only you (the owning customer) and OpsPilot admins. Other customers receive a generic “not found” response for your order IDs (IDOR-safe).
+Only you (the owning customer) and Harbor Dock Station admins. Other customers receive a generic “not found” response for your order IDs (IDOR-safe).

@@ -1,6 +1,6 @@
-# OpsPilot Cancellation Policy
+# Harbor Dock Station Cancellation Policy
 
-> OpsPilot is a fictional operational commerce demo. This policy mirrors the platform’s enforced business rules.
+> Harbor Dock Station is a fictional operational commerce demo. This policy mirrors the platform’s enforced business rules.
 
 **Last updated:** September 6, 2026
 

@@ -1,5 +1,5 @@
 """
-Seed OpsPilot with fictional demo data.
+Seed Harbor Dock Station with fictional demo data.
 
 Usage:
     python -m scripts.seed
@@ -102,14 +102,14 @@ PRODUCTS = [
 ]
 
 CUSTOMERS = [
-    ("Ava", "North", "ava.north@opspilot.demo"),
-    ("Ben", "Harbor", "ben.harbor@opspilot.demo"),
-    ("Cora", "Quill", "cora.quill@opspilot.demo"),
-    ("Diego", "Forge", "diego.forge@opspilot.demo"),
-    ("Elena", "Summit", "elena.summit@opspilot.demo"),
-    ("Finn", "Cascade", "finn.cascade@opspilot.demo"),
-    ("Gina", "Orbit", "gina.orbit@opspilot.demo"),
-    ("Hugo", "Lumen", "hugo.lumen@opspilot.demo"),
+    ("Ava", "North", "ava.north@harbordock.demo"),
+    ("Ben", "Harbor", "ben.harbor@harbordock.demo"),
+    ("Cora", "Quill", "cora.quill@harbordock.demo"),
+    ("Diego", "Forge", "diego.forge@harbordock.demo"),
+    ("Elena", "Summit", "elena.summit@harbordock.demo"),
+    ("Finn", "Cascade", "finn.cascade@harbordock.demo"),
+    ("Gina", "Orbit", "gina.orbit@harbordock.demo"),
+    ("Hugo", "Lumen", "hugo.lumen@harbordock.demo"),
 ]
 
 

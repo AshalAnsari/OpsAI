@@ -62,7 +62,7 @@ function DashboardContent() {
       <div>
         <h1 className="font-display text-4xl">Welcome, {user?.first_name}</h1>
         <p className="mt-2 text-[var(--ink-soft)]">
-          Your OpsPilot workspace for browsing catalog items and placing demo orders.
+          Your Harbor Dock Station workspace for browsing catalog items and placing demo orders.
         </p>
       </div>
 

@@ -13,7 +13,7 @@ def test_register_and_me(client):
     response = client.post(
         "/api/v1/auth/register",
         json={
-            "email": "new.user@opspilot.demo",
+            "email": "new.user@harbordock.demo",
             "password": "CustomerDemo123!",
             "first_name": "New",
             "last_name": "User",
@@ -27,7 +27,7 @@ def test_register_and_me(client):
     headers = {"Authorization": f"Bearer {body['data']['token']['access_token']}"}
     me = client.get("/api/v1/auth/me", headers=headers)
     assert me.status_code == 200
-    assert me.json()["data"]["email"] == "new.user@opspilot.demo"
+    assert me.json()["data"]["email"] == "new.user@harbordock.demo"
 
 
 def test_unauthenticated_protected_route(client):
@@ -37,15 +37,15 @@ def test_unauthenticated_protected_route(client):
 
 
 def test_customer_cannot_access_admin(client):
-    headers = auth_header(client, "ava.north@opspilot.demo", "CustomerDemo123!")
+    headers = auth_header(client, "ava.north@harbordock.demo", "CustomerDemo123!")
     response = client.get("/api/v1/admin/dashboard", headers=headers)
     assert response.status_code == 403
     assert response.json()["error"]["code"] == "FORBIDDEN"
 
 
 def test_order_creation_stock_and_idor(client):
-    headers = auth_header(client, "ava.north@opspilot.demo", "CustomerDemo123!")
-    other_headers = auth_header(client, "ben.harbor@opspilot.demo", "CustomerDemo123!")
+    headers = auth_header(client, "ava.north@harbordock.demo", "CustomerDemo123!")
+    other_headers = auth_header(client, "ben.harbor@harbordock.demo", "CustomerDemo123!")
 
     products = client.get("/api/v1/products").json()["data"]["items"]
     product_id = products[0]["id"]
@@ -75,7 +75,7 @@ def test_order_creation_stock_and_idor(client):
 
 
 def test_order_requires_shipping_country(client):
-    headers = auth_header(client, "ava.north@opspilot.demo", "CustomerDemo123!")
+    headers = auth_header(client, "ava.north@harbordock.demo", "CustomerDemo123!")
     response = client.post(
         "/api/v1/orders",
         headers=headers,
@@ -85,7 +85,7 @@ def test_order_requires_shipping_country(client):
 
 
 def test_invalid_order_rejected(client):
-    headers = auth_header(client, "ava.north@opspilot.demo", "CustomerDemo123!")
+    headers = auth_header(client, "ava.north@harbordock.demo", "CustomerDemo123!")
     response = client.post(
         "/api/v1/orders",
         headers=headers,
@@ -111,7 +111,7 @@ def test_invalid_order_rejected(client):
 
 
 def test_cancel_restores_stock(client):
-    headers = auth_header(client, "ava.north@opspilot.demo", "CustomerDemo123!")
+    headers = auth_header(client, "ava.north@harbordock.demo", "CustomerDemo123!")
     before = client.get("/api/v1/products").json()["data"]["items"][0]["stock_quantity"]
     created = client.post(
         "/api/v1/orders",
@@ -128,8 +128,8 @@ def test_cancel_restores_stock(client):
 
 
 def test_admin_status_transition_and_audit(client):
-    customer_headers = auth_header(client, "ava.north@opspilot.demo", "CustomerDemo123!")
-    admin_headers = auth_header(client, "admin@opspilot.demo", "AdminDemo123!")
+    customer_headers = auth_header(client, "ava.north@harbordock.demo", "CustomerDemo123!")
+    admin_headers = auth_header(client, "admin@harbordock.demo", "AdminDemo123!")
 
     create = client.post(
         "/api/v1/orders",
@@ -171,7 +171,7 @@ def test_admin_status_transition_and_audit(client):
 
 
 def test_abandon_unpaid_checkout(client):
-    headers = auth_header(client, "ava.north@opspilot.demo", "CustomerDemo123!")
+    headers = auth_header(client, "ava.north@harbordock.demo", "CustomerDemo123!")
     before = client.get("/api/v1/products").json()["data"]["items"][0]["stock_quantity"]
     created = client.post(
         "/api/v1/orders",
@@ -196,7 +196,7 @@ def test_fulfillment_advance_domestic_and_international(client, db_session):
     from app.models.role import User
     from app.services.fulfillment_service import FulfillmentService
 
-    customer = db_session.query(User).filter_by(email="ava.north@opspilot.demo").one()
+    customer = db_session.query(User).filter_by(email="ava.north@harbordock.demo").one()
     aged = datetime.now(timezone.utc) - timedelta(minutes=15)
 
     domestic = Order(
@@ -239,8 +239,8 @@ def test_fulfillment_advance_domestic_and_international(client, db_session):
 
 
 def test_admin_force_advance_and_cancel_after_dispatch(client):
-    customer_headers = auth_header(client, "ava.north@opspilot.demo", "CustomerDemo123!")
-    admin_headers = auth_header(client, "admin@opspilot.demo", "AdminDemo123!")
+    customer_headers = auth_header(client, "ava.north@harbordock.demo", "CustomerDemo123!")
+    admin_headers = auth_header(client, "admin@harbordock.demo", "AdminDemo123!")
 
     create = client.post(
         "/api/v1/orders",

@@ -5,7 +5,7 @@ export default function HomePage() {
     <section className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
       <div>
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">
-          OpsPilot Demo Platform
+          Harbor Dock Station Demo Platform
         </p>
         <h1 className="font-display mt-3 max-w-xl text-5xl leading-tight text-[var(--ink)] md:text-6xl">
           Operational commerce for teams that move inventory with clarity.

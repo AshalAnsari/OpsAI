@@ -12,7 +12,7 @@ from app.services.fulfillment_service import FulfillmentService
 from app.utils.exceptions import AppError, app_error_handler
 
 settings = get_settings()
-logger = logging.getLogger("opspilot.fulfillment")
+logger = logging.getLogger("harbordock.fulfillment")
 
 
 async def _fulfillment_cron_loop() -> None:
@@ -69,7 +69,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.app_name,
     description=(
-        "OpsPilot is a fictional operational SaaS demo platform. "
+        "Harbor Dock Station is a fictional operational SaaS demo platform. "
         "These REST APIs are designed to later become controlled tools for an AI assistant. "
         "All business rules, RBAC, and audit logging live on the server."
     ),
@@ -93,4 +93,4 @@ app.include_router(api_router, prefix=settings.api_v1_prefix)
 
 @app.get("/health", tags=["Health"])
 def health() -> dict:
-    return {"success": True, "data": {"status": "ok", "service": "opspilot-api"}}
+    return {"success": True, "data": {"status": "ok", "service": "harbordock-api"}}

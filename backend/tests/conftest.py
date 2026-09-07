@@ -48,7 +48,7 @@ def db_session():
     session.flush()
 
     admin = User(
-        email="admin@opspilot.demo",
+        email="admin@harbordock.demo",
         password_hash=hash_password("AdminDemo123!"),
         first_name="Ops",
         last_name="Admin",
@@ -56,7 +56,7 @@ def db_session():
         roles=[admin_role],
     )
     customer = User(
-        email="ava.north@opspilot.demo",
+        email="ava.north@harbordock.demo",
         password_hash=hash_password("CustomerDemo123!"),
         first_name="Ava",
         last_name="North",
@@ -64,7 +64,7 @@ def db_session():
         roles=[customer_role],
     )
     other = User(
-        email="ben.harbor@opspilot.demo",
+        email="ben.harbor@harbordock.demo",
         password_hash=hash_password("CustomerDemo123!"),
         first_name="Ben",
         last_name="Harbor",

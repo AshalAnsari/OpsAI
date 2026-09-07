@@ -16,9 +16,9 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const meta = getPolicyMeta(slug);
-  if (!meta) return { title: "Policy — OpsPilot" };
+  if (!meta) return { title: "Policy — Harbor Dock Station" };
   return {
-    title: `${meta.title} — OpsPilot`,
+    title: `${meta.title} — Harbor Dock Station`,
     description: meta.summary,
   };
 }

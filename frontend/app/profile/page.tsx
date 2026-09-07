@@ -148,7 +148,7 @@ function ProfileContent() {
         <form onSubmit={onSubmit} className="surface space-y-4 rounded-2xl p-6">
           <h2 className="font-display text-2xl">Account details</h2>
           <p className="text-sm text-[var(--ink-soft)]">
-            Update the name shown across OpsPilot. Email stays tied to your login.
+            Update the name shown across Harbor Dock Station. Email stays tied to your login.
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>

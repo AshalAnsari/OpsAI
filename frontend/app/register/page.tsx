@@ -46,7 +46,7 @@ export default function RegisterPage() {
   return (
     <div className="mx-auto max-w-md">
       <h1 className="font-display text-4xl">Create account</h1>
-      <p className="mt-2 text-[var(--ink-soft)]">Join OpsPilot as a customer and place demo orders.</p>
+      <p className="mt-2 text-[var(--ink-soft)]">Join Harbor Dock Station as a customer and place demo orders.</p>
       <form onSubmit={onSubmit} className="surface mt-6 space-y-4 rounded-2xl p-6">
         <div className="grid grid-cols-2 gap-3">
           <div>

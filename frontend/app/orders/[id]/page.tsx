@@ -46,7 +46,7 @@ function OrderDetailContent() {
       const payment = searchParams.get("payment");
       if (payment === "success") {
         clear();
-        sessionStorage.removeItem("opspilot_pending_checkout");
+        sessionStorage.removeItem("harbordock_pending_checkout");
         setMessage("Payment confirmed. Your order is placed and will progress from the NY warehouse.");
         return;
       }
@@ -54,17 +54,17 @@ function OrderDetailContent() {
         try {
           const updated = await api.post<Order>(`/api/v1/orders/${params.id}/abandon-checkout`);
           setOrder(updated);
-          const pending = sessionStorage.getItem("opspilot_pending_checkout");
+          const pending = sessionStorage.getItem("harbordock_pending_checkout");
           if (pending) {
             try {
               const parsed = JSON.parse(pending) as { cart?: CartItem[] };
               if (parsed.cart?.length) {
-                localStorage.setItem("opspilot_cart", JSON.stringify(parsed.cart));
+                localStorage.setItem("harbordock_cart", JSON.stringify(parsed.cart));
               }
             } catch {
               // ignore
             }
-            sessionStorage.removeItem("opspilot_pending_checkout");
+            sessionStorage.removeItem("harbordock_pending_checkout");
           }
           setMessage(
             "Checkout was cancelled or declined. The order was not placed and stock was released.",

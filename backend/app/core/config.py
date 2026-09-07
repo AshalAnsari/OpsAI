@@ -15,14 +15,14 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    app_name: str = "OpsPilot API"
+    app_name: str = "Harbor Dock Station API"
     app_env: str = "development"
     api_v1_prefix: str = "/api/v1"
     debug: bool = True
 
-    database_url: str = "mysql+pymysql://opspilot:opspilot@localhost:3306/opspilot"
+    database_url: str = "mysql+pymysql://harbordock:harbordock@localhost:3306/harbordock"
 
-    jwt_secret_key: str = "change-me-in-production-opspilot-demo-secret"
+    jwt_secret_key: str = "change-me-in-production-harbordock-demo-secret"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 60 * 24
 
@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     stripe_webhook_secret: str = "whsec_placeholder"
     stripe_currency: str = "usd"
 
-    seed_admin_email: str = "admin@opspilot.demo"
+    seed_admin_email: str = "admin@harbordock.demo"
     seed_admin_password: str = "AdminDemo123!"
     seed_customer_password: str = "CustomerDemo123!"
 
@@ -43,7 +43,7 @@ class Settings(BaseSettings):
     smtp_port: int = 587
     smtp_username: str = ""
     smtp_password: str = ""
-    smtp_from_email: str = "noreply@opspilot.demo"
+    smtp_from_email: str = "noreply@harbordock.demo"
     smtp_use_tls: bool = True
 
     fulfillment_cron_enabled: bool = True

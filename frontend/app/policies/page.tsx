@@ -4,8 +4,8 @@ import type { Metadata } from "next";
 import { POLICIES } from "@/lib/policies";
 
 export const metadata: Metadata = {
-  title: "Policies — OpsPilot",
-  description: "Cancellation, refund, shipping, payment, and account policies for OpsPilot.",
+  title: "Policies — Harbor Dock Station",
+  description: "Cancellation, refund, shipping, payment, and account policies for Harbor Dock Station.",
 };
 
 export default function PoliciesPage() {
@@ -17,7 +17,7 @@ export default function PoliciesPage() {
         </p>
         <h1 className="font-display mt-2 text-4xl">Policies</h1>
         <p className="mt-3 max-w-2xl text-[var(--ink-soft)]">
-          Clear rules for cancellation, refunds, shipping, payments, and accounts. OpsPilot is a
+          Clear rules for cancellation, refunds, shipping, payments, and accounts. Harbor Dock Station is a
           fictional demo storefront — these policies mirror how the product actually behaves.
         </p>
       </div>

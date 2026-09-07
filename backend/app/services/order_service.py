@@ -146,7 +146,7 @@ class OrderService:
     def _create_stripe_checkout(self, order: Order, products: list[dict], customer_email: str) -> str:
         """Create a Stripe Checkout Session in sandbox/test mode.
 
-        When STRIPE_SECRET_KEY is still a placeholder, OpsPilot uses a local demo
+        When STRIPE_SECRET_KEY is still a placeholder, Harbor Dock Station uses a local demo
         checkout URL so the platform can be exercised without real Stripe credentials.
         """
         if settings.stripe_secret_key.startswith("sk_test_placeholder"):

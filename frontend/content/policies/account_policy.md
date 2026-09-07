@@ -1,6 +1,6 @@
-# OpsPilot Account Policy
+# Harbor Dock Station Account Policy
 
-> OpsPilot is a fictional operational commerce demo. This policy describes account registration, access, and profile rules enforced by the platform.
+> Harbor Dock Station is a fictional operational commerce demo. This policy describes account registration, access, and profile rules enforced by the platform.
 
 **Last updated:** September 6, 2026
 
@@ -63,7 +63,7 @@ Customers can open support tickets, reply in-thread, and track status (`open`, `
 
 ## Acceptable use (demo)
 
-OpsPilot is a **synthetic portfolio demo**:
+Harbor Dock Station is a **synthetic portfolio demo**:
 
 - Do not enter real personal data beyond what you need for local testing.
 - Do not use production Stripe live keys.

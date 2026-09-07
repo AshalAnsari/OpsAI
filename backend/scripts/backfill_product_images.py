@@ -14,7 +14,7 @@ from sqlalchemy import select
 from app.core.database import SessionLocal
 from app.models.product import Product
 
-# Curated Unsplash images matched to each fictional OpsPilot product.
+# Curated Unsplash images matched to each fictional Harbor Dock Station product.
 # Multiple URLs enable the product detail carousel.
 PRODUCT_MEDIA: dict[str, dict] = {
     "Nimbus Cloud Desk": {

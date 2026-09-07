@@ -1,6 +1,6 @@
-# OpsPilot — Operational SaaS Demo Platform
+# Harbor Dock Station — Operational SaaS Demo Platform
 
-OpsPilot is a **fictional** operational commerce SaaS: customers browse products, place demo orders, and track fulfillment; admins run catalog, orders, support, and audit from an operations console.
+Harbor Dock Station is a **fictional** operational commerce SaaS: customers browse products, place demo orders, and track fulfillment; admins run catalog, orders, support, and audit from an operations console.
 
 The platform exposes REST APIs that an AI assistant layer can call as controlled tools — never the database directly.
 
@@ -100,7 +100,7 @@ Important variables:
 - `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` / `SEED_CUSTOMER_PASSWORD`
 - `NEXT_PUBLIC_API_URL`
 
-If Stripe keys remain placeholders (`sk_test_placeholder`), OpsPilot uses **local demo checkout** and `POST /api/v1/webhooks/stripe/demo-complete` to simulate payment success.
+If Stripe keys remain placeholders (`sk_test_placeholder`), Harbor Dock Station uses **local demo checkout** and `POST /api/v1/webhooks/stripe/demo-complete` to simulate payment success.
 
 ---
 
@@ -213,8 +213,8 @@ pytest -q
 
 | Role | Email | Password |
 | --- | --- | --- |
-| Admin | `admin@opspilot.demo` | `AdminDemo123!` |
-| Customer | `ava.north@opspilot.demo` | `CustomerDemo123!` |
+| Admin | `admin@harbordock.demo` | `AdminDemo123!` |
+| Customer | `ava.north@harbordock.demo` | `CustomerDemo123!` |
 
 Other seeded customers use the same customer password.
 

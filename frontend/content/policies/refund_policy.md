@@ -1,6 +1,6 @@
-# OpsPilot Refund Policy
+# Harbor Dock Station Refund Policy
 
-> OpsPilot is a fictional operational commerce demo. This policy describes how refunds relate to platform payment and order states.
+> Harbor Dock Station is a fictional operational commerce demo. This policy describes how refunds relate to platform payment and order states.
 
 **Last updated:** September 6, 2026
 
@@ -8,7 +8,7 @@
 
 ## Overview
 
-OpsPilot charges through **Stripe Checkout** (sandbox / test mode) or a **local demo checkout** when Stripe keys are placeholders. Payment confirmation is always event-driven via webhooks — the frontend alone cannot mark an order as paid.
+Harbor Dock Station charges through **Stripe Checkout** (sandbox / test mode) or a **local demo checkout** when Stripe keys are placeholders. Payment confirmation is always event-driven via webhooks — the frontend alone cannot mark an order as paid.
 
 Supported payment statuses:
 

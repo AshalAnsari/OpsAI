@@ -1,4 +1,4 @@
-# OpsPilot — DEVELOPMENT stack
+# Harbor Dock Station — DEVELOPMENT stack
 # Usage:
 #   docker compose -f docker-compose.dev.yml up --build
 #
@@ -8,19 +8,19 @@
 services:
   mysql:
     image: mysql:8.0
-    container_name: opspilot-mysql
+    container_name: harbordock-mysql
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: opspilot
-      MYSQL_USER: opspilot
-      MYSQL_PASSWORD: opspilot
+      MYSQL_DATABASE: harbordock
+      MYSQL_USER: harbordock
+      MYSQL_PASSWORD: harbordock
     ports:
       - "3306:3306"
     volumes:
-      - opspilot_mysql_data:/var/lib/mysql
+      - harbordock_mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uopspilot", "-popspilot"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uharbordock", "-pharbordock"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -29,13 +29,13 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile.dev
-    container_name: opspilot-backend
+    container_name: harbordock-backend
     restart: unless-stopped
     env_file:
       - .env
     environment:
       APP_ENV: development
-      DATABASE_URL: mysql+pymysql://opspilot:opspilot@mysql:3306/opspilot
+      DATABASE_URL: mysql+pymysql://harbordock:harbordock@mysql:3306/harbordock
       FRONTEND_URL: http://localhost:3000
       CORS_ORIGINS: http://localhost:3000
       WATCHFILES_FORCE_POLLING: "true"
@@ -53,7 +53,7 @@ services:
       dockerfile: Dockerfile.dev
       args:
         NEXT_PUBLIC_API_URL: http://localhost:8000
-    container_name: opspilot-frontend
+    container_name: harbordock-frontend
     restart: unless-stopped
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:8000
@@ -69,6 +69,6 @@ services:
       - backend
 
 volumes:
-  opspilot_mysql_data:
+  harbordock_mysql_data:
   frontend_node_modules:
   frontend_next_cache:

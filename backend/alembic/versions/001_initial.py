@@ -1,4 +1,4 @@
-"""Initial OpsPilot schema
+"""Initial Harbor Dock Station schema
 
 Revision ID: 001_initial
 Revises:

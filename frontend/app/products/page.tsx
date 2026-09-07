@@ -40,7 +40,7 @@ export default function ProductsPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-4xl">Catalog</h1>
-          <p className="mt-2 text-[var(--ink-soft)]">Fictional OpsPilot workspace goods for demo orders.</p>
+          <p className="mt-2 text-[var(--ink-soft)]">Fictional Harbor Dock Station workspace goods for demo orders.</p>
         </div>
         <input
           className="input max-w-xs"

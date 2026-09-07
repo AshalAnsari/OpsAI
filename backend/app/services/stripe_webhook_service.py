@@ -2,7 +2,7 @@
 Stripe Webhook Service
 
 Separated from order placement so payment confirmation is event-driven.
-OpsPilot never trusts the frontend alone to mark an order as paid.
+Harbor Dock Station never trusts the frontend alone to mark an order as paid.
 
 Handled events:
 - checkout.session.completed  → mark paid + confirm order

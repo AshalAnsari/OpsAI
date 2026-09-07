@@ -14,7 +14,7 @@ build/
 .DS_Store
 coverage/
 htmlcov/
-opspilot_mysql_data/
+harbordock_mysql_data/
 
 credentials.txt
 ORACLE_DEPLOYMENT.md
@@ -22,3 +22,4 @@ OPERATIONS.md
 EVALUATION.md
 
 evaluation/
+DAY1.md

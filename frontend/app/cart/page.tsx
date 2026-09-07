@@ -69,7 +69,7 @@ function CartContent() {
       if (result.checkout_url) {
         // Do not clear cart yet — if checkout is cancelled/declined, order is abandoned.
         sessionStorage.setItem(
-          "opspilot_pending_checkout",
+          "harbordock_pending_checkout",
           JSON.stringify({ orderId: result.order.id, cart: items }),
         );
         window.location.href = result.checkout_url;

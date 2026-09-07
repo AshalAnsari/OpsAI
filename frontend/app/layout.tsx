@@ -19,7 +19,7 @@ const sans = IBM_Plex_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "OpsPilot — Operational SaaS Demo",
+  title: "Harbor Dock Station — Operational SaaS Demo",
   description:
     "Fictional operational commerce platform for Applied AI portfolio demos. Synthetic data only.",
 };

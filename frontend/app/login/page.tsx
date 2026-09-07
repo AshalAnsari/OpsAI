@@ -40,7 +40,7 @@ export default function LoginPage() {
   return (
     <div className="mx-auto max-w-md">
       <h1 className="font-display text-4xl">Sign in</h1>
-      <p className="mt-2 text-[var(--ink-soft)]">Access your OpsPilot customer or admin workspace.</p>
+      <p className="mt-2 text-[var(--ink-soft)]">Access your Harbor Dock Station customer or admin workspace.</p>
       <form onSubmit={onSubmit} className="surface mt-6 space-y-4 rounded-2xl p-6">
         <div>
           <label className="label">Email</label>

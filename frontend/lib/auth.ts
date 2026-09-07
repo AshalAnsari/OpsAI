@@ -1,7 +1,7 @@
 import type { AuthUser } from "./types";
 
-const TOKEN_KEY = "opspilot_access_token";
-const USER_KEY = "opspilot_user";
+const TOKEN_KEY = "harbordock_access_token";
+const USER_KEY = "harbordock_user";
 
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;

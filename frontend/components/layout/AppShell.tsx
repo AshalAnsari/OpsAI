@@ -46,7 +46,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-40 border-b border-[var(--line)] bg-[rgba(255,253,248,0.92)] backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4">
           <Link href="/" className="font-display text-2xl tracking-tight text-[var(--ink)]">
-            OpsPilot
+            Harbor Dock Station
           </Link>
           <nav className="hidden items-center gap-4 lg:flex">
             {user &&
@@ -114,7 +114,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <footer className="border-t border-[var(--line)] bg-[rgba(255,253,248,0.7)]">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="font-display text-lg">OpsPilot</p>
+            <p className="font-display text-lg">Harbor Dock Station</p>
             <p className="mt-1 text-sm text-[var(--ink-soft)]">
               Fictional demo storefront. Synthetic data only.
             </p>

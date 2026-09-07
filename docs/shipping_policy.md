@@ -1,6 +1,6 @@
-# OpsPilot Shipping Policy
+# Harbor Dock Station Shipping Policy
 
-> OpsPilot is a fictional operational commerce demo. Shipping rules match the fulfillment engine in the product.
+> Harbor Dock Station is a fictional operational commerce demo. Shipping rules match the fulfillment engine in the product.
 
 **Last updated:** September 6, 2026
 

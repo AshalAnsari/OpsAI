@@ -141,7 +141,7 @@ class SupportService:
         self.notifications.notify(
             user_id=ticket.customer_id,
             title="Support reply received",
-            body=f"OpsPilot support replied to {ticket.display_id}: {ticket.subject}",
+            body=f"Harbor Dock Station support replied to {ticket.display_id}: {ticket.subject}",
             link=f"/support/{ticket.id}",
         )
         self.audit.create(
@@ -155,14 +155,14 @@ class SupportService:
         if customer_email:
             send_email(
                 to_email=customer_email,
-                subject=f"[OpsPilot] Reply on {ticket.display_id}: {ticket.subject}",
+                subject=f"[Harbor Dock Station] Reply on {ticket.display_id}: {ticket.subject}",
                 body=(
                     f"Hello,\n\n"
                     f"Our support team replied to your ticket {ticket.display_id}.\n\n"
                     f"Subject: {ticket.subject}\n\n"
                     f"Reply:\n{payload.body.strip()}\n\n"
                     f"View the conversation: {settings.frontend_url}/support/{ticket.id}\n\n"
-                    f"— OpsPilot Support\n"
+                    f"— Harbor Dock Station Support\n"
                 ),
             )
 
