@@ -50,6 +50,12 @@ class Settings(BaseSettings):
     # Override interval in minutes. When unset: 10 in development, 60 in production.
     fulfillment_advance_interval_minutes: int | None = None
 
+    # AI OS (LangGraph) — prefer OpenRouter like AI Roadmap notebooks
+    openrouter_api_key: str = ""
+    openrouter_base_url: str = "https://openrouter.ai/api/v1"
+    openai_api_key: str = ""
+    ai_model: str = "openai/gpt-4o-mini"
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]

@@ -220,6 +220,17 @@ Other seeded customers use the same customer password.
 
 ---
 
+## 10b. AI Support (Day 3 core)
+
+LangGraph AI OS Mini for support ops: live order tools + policy RAG + HITL tickets.
+
+- UI: http://localhost:3000/support/ai  
+- API: `POST /api/v1/ai/support/chat`  
+- Non-developer steps: see **`RUNBOOK.md`** (three-step setup)  
+- Requires `OPENROUTER_API_KEY` in `.env` (see `.env.example`)
+
+---
+
 ## 11. API documentation
 
 Interactive OpenAPI docs: http://localhost:8000/docs

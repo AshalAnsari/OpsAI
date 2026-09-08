@@ -77,8 +77,11 @@ function SupportContent() {
       <div>
         <h1 className="font-display text-4xl">Contact support</h1>
         <p className="mt-2 text-[var(--ink-soft)]">
-          Open a ticket for order help, catalog questions, or account issues. For self-serve answers,
-          see our{" "}
+          Open a ticket for order help, catalog questions, or account issues. Or try{" "}
+          <Link href="/support/ai" className="text-[var(--accent)] underline-offset-2 hover:underline">
+            AI Support
+          </Link>{" "}
+          for faster lookups. For self-serve answers, see our{" "}
           <Link href="/policies" className="text-[var(--accent)] underline-offset-2 hover:underline">
             policies
           </Link>

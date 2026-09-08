@@ -13,6 +13,7 @@ const customerLinks = [
   { href: "/products", label: "Products" },
   { href: "/orders", label: "Orders" },
   { href: "/support", label: "Support" },
+  { href: "/support/ai", label: "AI Support" },
   { href: "/policies", label: "Policies" },
 ];
 
