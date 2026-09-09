@@ -25,7 +25,7 @@ from app.ai.guards import (
     looks_like_prompt_injection,
     message_confirms_cancel,
 )
-from app.ai.llm import get_chat_model
+from app.ai.llm import answer_model_tier, get_chat_model
 from app.ai.state import SupportState
 from app.ai.tools import HarborTools, parse_order_id
 from app.models.role import User
@@ -103,7 +103,8 @@ def _cancellable_status(status: str | None) -> bool:
 
 def build_support_graph(db: Session, customer: User):
     tools = HarborTools(db, customer)
-    model = get_chat_model()
+    # Classification is structured and short → cheaper model (cost control).
+    classify_model = get_chat_model("cheap")
 
     def classify(state: SupportState) -> dict[str, Any]:
         user_message = state["user_message"]
@@ -127,7 +128,7 @@ def build_support_graph(db: Session, customer: User):
                 "ticket_information": "",
             }
 
-        result = model.with_structured_output(ClassifyResult).invoke(
+        result = classify_model.with_structured_output(ClassifyResult).invoke(
             [
                 SystemMessage(content=CLASSIFY_PROMPT),
                 HumanMessage(content=user_message),
@@ -274,6 +275,7 @@ def build_support_graph(db: Session, customer: User):
                     "ok": knowledge.get("ok"),
                     "tool": "search_knowledge",
                     "citations": knowledge.get("citations"),
+                    "retrieval_mode": knowledge.get("retrieval_mode"),
                 }
             )
             retrieved = str(knowledge.get("text") or "")
@@ -355,7 +357,9 @@ Tool results (JSON):
 Policy context:
 {state.get("retrieved_information") or "(none)"}
 """
-        result = model.with_structured_output(AnswerResult).invoke(
+        tier = answer_model_tier(str(state.get("intent") or ""))
+        answer_model = get_chat_model(tier)
+        result = answer_model.with_structured_output(AnswerResult).invoke(
             [
                 SystemMessage(content=ANSWER_PROMPT),
                 HumanMessage(content=human_content),

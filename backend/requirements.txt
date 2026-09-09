@@ -20,3 +20,6 @@ langchain-openai>=0.3.0
 langchain-core>=0.3.0
 langgraph>=0.2.0
 typing-extensions>=4.12.0
+langchain-text-splitters>=0.3.0
+langchain-chroma>=0.2.0
+chromadb>=0.5.0

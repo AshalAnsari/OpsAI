@@ -137,4 +137,5 @@ class HarborTools:
             "tool": "search_knowledge",
             "text": result["text"],
             "citations": result["citations"],
+            "retrieval_mode": result.get("retrieval_mode"),
         }

@@ -39,3 +39,12 @@ def test_display_id_parsing():
     assert parse_order_id("OP-10016") == 16
     assert parse_order_id("order #16") == 16
 
+
+def test_answer_model_tier_routing():
+    from app.ai.llm import answer_model_tier
+
+    assert answer_model_tier("ORDER_STATUS") == "cheap"
+    assert answer_model_tier("POLICY_QUESTION") == "cheap"
+    assert answer_model_tier("REFUND_REQUEST") == "medium"
+    assert answer_model_tier("ORDER_CANCELLATION") == "medium"
+

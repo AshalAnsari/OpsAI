@@ -54,7 +54,14 @@ class Settings(BaseSettings):
     openrouter_api_key: str = ""
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
     openai_api_key: str = ""
+    # Legacy single-model override (used if cheap/medium unset)
     ai_model: str = "openai/gpt-4o-mini"
+    # cost routing
+    ai_model_cheap: str = "openai/gpt-4o-mini"
+    ai_model_medium: str = "openai/gpt-4o-mini"
+    ai_embedding_model: str = "openai/text-embedding-3-small"
+    # auto = static vector with keyword fallback; keyword = naive only; vector = vector only
+    rag_mode: str = "auto"
 
     @property
     def cors_origin_list(self) -> list[str]:

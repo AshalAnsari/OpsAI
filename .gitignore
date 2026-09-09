@@ -15,6 +15,7 @@ build/
 coverage/
 htmlcov/
 harbordock_mysql_data/
+backend/knowledge/chroma/
 
 credentials.txt
 ORACLE_DEPLOYMENT.md
@@ -22,6 +23,3 @@ OPERATIONS.md
 EVALUATION.md
 
 evaluation/
-DAY1.md
-DAY2.md
-DAY3.md

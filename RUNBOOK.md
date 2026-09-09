@@ -44,7 +44,18 @@ Wait until frontend is on http://localhost:3000 and API on http://localhost:8000
 
 In `.env` (see `.env.example`):
 
-- `OPENROUTER_API_KEY=...`  
-- `AI_MODEL=openai/gpt-4o-mini` (or your OpenRouter model id)
+- `OPENROUTER_API_KEY=...`
+- `AI_MODEL_CHEAP=openai/gpt-4o-mini` — classify + simple answers
+- `AI_MODEL_MEDIUM=openai/gpt-4o-mini` — cancel / refund / delivery answers (raise to a larger model if desired)
+- `AI_EMBEDDING_MODEL=openai/text-embedding-3-small`
+- `RAG_MODE=auto` — static Chroma vector RAG with keyword fallback
 
-Without an API key, AI Support returns a clear configuration error.
+### Rebuild policy index (after editing markdown policies)
+
+```bash
+cd backend
+python -m scripts.build_knowledge_index --force
+```
+
+This is a **static batch index** — it does **not** auto-update when files change until you rebuild.
+
