@@ -25,7 +25,17 @@ def test_prompt_injection():
     assert not looks_like_prompt_injection("I want a refund for order 16")
 
 
+def test_cancel_confirmation_language():
+    from app.ai.guards import message_confirms_cancel
+
+    assert message_confirms_cancel("yes, confirm cancel")
+    assert message_confirms_cancel("I confirm")
+    assert message_confirms_cancel("yes")
+    assert not message_confirms_cancel("Please cancel my pending order OP-10017")
+
+
 def test_display_id_parsing():
     assert parse_order_id("order #10016") == 16
     assert parse_order_id("OP-10016") == 16
     assert parse_order_id("order #16") == 16
+

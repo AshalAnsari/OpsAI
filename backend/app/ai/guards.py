@@ -41,6 +41,24 @@ def looks_like_prompt_injection(message: str) -> bool:
     return any(p.search(text) for p in _INJECTION_PATTERNS)
 
 
+_CONFIRM_CANCEL_PATTERNS = [
+    re.compile(r"\bi\s+confirm\b", re.I),
+    re.compile(r"\bconfirm(\s+cancel|\s+cancellation)?\b", re.I),
+    re.compile(r"\byes[,.]?\s*(please\s+)?(cancel|do\s+it|proceed)\b", re.I),
+    re.compile(r"\b(go\s+ahead|please\s+proceed|do\s+it)\b", re.I),
+    re.compile(r"^\s*yes\s*[.!?]?\s*$", re.I),
+    re.compile(r"^\s*confirm\s*[.!?]?\s*$", re.I),
+]
+
+
+def message_confirms_cancel(message: str) -> bool:
+    """True when the user explicitly confirms cancel in natural language (TC02)."""
+    text = (message or "").strip()
+    if not text:
+        return False
+    return any(p.search(text) for p in _CONFIRM_CANCEL_PATTERNS)
+
+
 CROSS_CUSTOMER_REFUSAL = (
     "I can’t show another customer’s order details. "
     "For privacy, I can only access orders on your own Harbor Dock Station account. "

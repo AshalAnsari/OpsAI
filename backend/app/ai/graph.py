@@ -23,6 +23,7 @@ from app.ai.guards import (
     is_cross_customer_request,
     looks_like_cancellation,
     looks_like_prompt_injection,
+    message_confirms_cancel,
 )
 from app.ai.llm import get_chat_model
 from app.ai.state import SupportState
@@ -66,7 +67,7 @@ Rules:
 - If policy context says information is unavailable (e.g. lifetime warranty), say so. Do not invent a warranty.
 - For REFUND_REQUEST: never claim a refund was processed. Say a human must approve.
 - If ticket_information shows a created ticket, tell the customer the ticket display_id was already opened — do NOT ask them to open another ticket.
-- For ORDER_CANCELLATION: if cancel was not executed and the order is eligible, tell them to check "Confirm cancel" and resend with the same order id. If not eligible (dispatched/delivered), explain why using tool/policy data — do not pretend a cancel happened.
+- For ORDER_CANCELLATION: if cancel was executed (action_taken=cancel), confirm success with the new status. If eligible but not yet cancelled, ask them to confirm by either (1) checking Confirm cancel and sending again, or (2) replying "yes, confirm cancel" / "I confirm cancel" with the same order id — do NOT open a support ticket for a normal eligible cancel. If not eligible (dispatched/delivered), explain why — do not pretend a cancel happened.
 - For ORDER_CHANGE on a dispatched order: clearly refuse; do not imply a refund was filed unless a ticket was actually created.
 - Prefer display_id (OP-…) when referring to orders.
 - Tool results for get_my_orders are ALWAYS the current user's orders only — never rename them as another person's.
@@ -133,6 +134,10 @@ def build_support_graph(db: Session, customer: User):
             ]
         )
         parsed = parse_order_id(user_message, result.order_id)
+        # Keep order_id_hint from the client when the user only says "yes" / "I confirm".
+        if parsed is None and state.get("order_id"):
+            parsed = state.get("order_id")
+
         intent = result.intent
         risk = result.risk_level
 
@@ -142,6 +147,11 @@ def build_support_graph(db: Session, customer: User):
             "GENERAL_SUPPORT",
             "ORDER_STATUS",
         }:
+            intent = "ORDER_CANCELLATION"
+            risk = "LOW_RISK_WRITE"
+
+        # TC02: short confirm replies ("yes", "I confirm cancel") are still cancellations.
+        if message_confirms_cancel(user_message):
             intent = "ORDER_CANCELLATION"
             risk = "LOW_RISK_WRITE"
 
@@ -187,7 +197,10 @@ def build_support_graph(db: Session, customer: User):
             }
 
         order_id = state.get("order_id")
-        confirm_cancel = bool(state.get("confirm_cancel"))
+        # Checkbox OR natural-language confirm ("yes", "I confirm cancel", …).
+        confirm_cancel = bool(state.get("confirm_cancel")) or message_confirms_cancel(
+            state.get("user_message") or ""
+        )
         called: list[str] = []
         results: list[dict[str, Any]] = []
         citations: list[str] = []

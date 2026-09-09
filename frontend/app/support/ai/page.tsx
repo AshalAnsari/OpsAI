@@ -76,8 +76,8 @@ function AISupportContent() {
         message,
         confirm_cancel: confirmCancel,
       };
-      // Day 3: reuse last looked-up order when confirming cancel without repeating the id.
-      if (confirmCancel && lastOrderId) {
+      // Keep last order so "yes / I confirm cancel" or the checkbox can finish TC02.
+      if (lastOrderId) {
         payload.order_id_hint = lastOrderId;
       }
 
@@ -182,9 +182,11 @@ function AISupportContent() {
               onChange={(e) => setConfirmCancel(e.target.checked)}
             />
             <span>
-              <strong>Confirm cancel</strong> — when checked, this send will cancel the eligible order
-              {lastOrderId ? ` (last order id ${lastOrderId} / OP-${10000 + lastOrderId})` : " mentioned in your message"}
-              . Leave unchecked to only check eligibility.
+              <strong>Confirm cancel</strong> — required before an eligible order is actually
+              cancelled. You can also reply <em>yes, confirm cancel</em> after the agent asks.
+              {lastOrderId
+                ? ` Last order in this chat: OP-${10000 + lastOrderId}.`
+                : " Include the order id (e.g. OP-10017) in your message."}
             </span>
           </label>
           <textarea
