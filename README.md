@@ -6,6 +6,18 @@ The platform exposes REST APIs that an AI assistant layer can call as controlled
 
 All branding, customers, products, and credentials are synthetic.
 
+## Quick start (after clone)
+
+```bash
+./setup-docker.sh
+# fresh deterministic Ava orders OP-10001…OP-10005:
+./setup-docker.sh --reset
+```
+
+- App: http://localhost:3000 · AI Support: http://localhost:3000/support/ai  
+- Accounts & orders: **`DEMO-ACCOUNTS.md`** · Non-dev steps: **`RUNBOOK.md`**  
+- Add `OPENROUTER_API_KEY` to `.env` for AI Support (script creates `.env` from `.env.example` if missing).
+
 ---
 
 ## 1. Project overview
@@ -77,6 +89,10 @@ AIOPS/
 │   ├── hooks/
 │   └── lib/
 ├── docker-compose.yml
+├── docker-compose.dev.yml
+├── setup-docker.sh          # one-command clone setup + seed
+├── DEMO-ACCOUNTS.md         # demo logins + Ava OP-10001…OP-10005
+├── RUNBOOK.md
 ├── .env.example
 └── README.md
 ```
@@ -130,15 +146,15 @@ Initial migration: `alembic/versions/001_initial.py`
 python -m scripts.seed
 ```
 
-Creates:
+Creates (deterministic):
 
-- 1 admin
-- 8 customers
+- 1 admin + 8 customers
 - 15 products
-- 15 sample orders
+- Ava scenario orders **OP-10001…OP-10005** (cancel / dispatched / delivered / refund / status)
+- Extra orders for other customers (privacy / catalog demos)
 - audit log entries
 
-Docker startup runs migrations + seed automatically.
+Docker startup runs migrations + seed automatically. See `DEMO-ACCOUNTS.md`.
 
 ---
 
@@ -147,9 +163,19 @@ Docker startup runs migrations + seed automatically.
 ### Option A — Docker Compose DEV (recommended now)
 
 ```bash
+./setup-docker.sh
+# wipe DB and reseed Ava OP-10001…OP-10005:
+./setup-docker.sh --reset
+```
+
+Or manually:
+
+```bash
 cp .env.example .env
 docker compose -f docker-compose.dev.yml up --build
 ```
+
+`./setup-docker.sh` creates `.env` if missing, starts the stack, waits for health, builds the **Chroma vector DB** for policy RAG when `OPENROUTER_API_KEY` / `OPENAI_API_KEY` is set (otherwise keyword fallback), and prints demo accounts (`DEMO-ACCOUNTS.md`). Backend CMD already runs Alembic + deterministic seed.
 
 This builds **`Dockerfile.dev`** for backend and frontend, starts MySQL + API + UI, and bind-mounts source for live reload.
 

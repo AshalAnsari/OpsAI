@@ -1,13 +1,15 @@
 """
-Seed Harbor Dock Station with fictional demo data.
+Seed Harbor Dock Station with fictional, deterministic demo data.
 
 Usage:
     python -m scripts.seed
+
+Creates stable Ava North scenario orders (OP-10001…) so clones can run the same
+eval prompts. Idempotent: skips if roles already exist.
 """
 
 from __future__ import annotations
 
-import random
 from decimal import Decimal
 
 from app.core.config import get_settings
@@ -112,12 +114,90 @@ CUSTOMERS = [
     ("Hugo", "Lumen", "hugo.lumen@harbordock.demo"),
 ]
 
+# Ava scenario orders — created first so fresh DBs get OP-10001…OP-10005.
+# (eval / AI Support smoke prompts)
+AVA_SCENARIO_ORDERS: list[tuple[OrderStatus, PaymentStatus, str, str, str]] = [
+    # status, payment, country, country_name, note
+    (OrderStatus.PENDING, PaymentStatus.PENDING, "US", "United States", "TC02 cancel-eligible + TC04 payment pending"),
+    (OrderStatus.DISPATCHED, PaymentStatus.PAID, "US", "United States", "TC03 late cancel + TC08 address change"),
+    (OrderStatus.DELIVERED, PaymentStatus.PAID, "US", "United States", "TC07 missing package"),
+    (OrderStatus.CONFIRMED, PaymentStatus.PAID, "US", "United States", "TC06 refund / HITL"),
+    (OrderStatus.OUT_FOR_DELIVERY, PaymentStatus.PAID, "US", "United States", "TC01 live status"),
+]
+
+# Extra deterministic orders for other customers (privacy / catalog demos).
+OTHER_ORDERS: list[tuple[int, OrderStatus, PaymentStatus, str, str, tuple[int, ...]]] = [
+    # customer_index (into CUSTOMERS), status, payment, country, country_name, product indices
+    (1, OrderStatus.PROCESSING, PaymentStatus.PAID, "US", "United States", (0, 1)),
+    (1, OrderStatus.DISPATCHED, PaymentStatus.PAID, "CA", "Canada", (12,)),
+    (2, OrderStatus.PENDING, PaymentStatus.PENDING, "US", "United States", (5,)),
+    (3, OrderStatus.IN_TRANSIT_INTERNATIONAL, PaymentStatus.PAID, "GB", "United Kingdom", (7, 10)),
+    (4, OrderStatus.CUSTOMS_CLEARANCE, PaymentStatus.PAID, "DE", "Germany", (8,)),
+    (5, OrderStatus.DELIVERED, PaymentStatus.PAID, "AU", "Australia", (2, 3)),
+    (6, OrderStatus.CANCELLED, PaymentStatus.FAILED, "US", "United States", (4,)),
+    (7, OrderStatus.CONFIRMED, PaymentStatus.PAID, "US", "United States", (9, 11)),
+    (2, OrderStatus.OUT_FOR_DELIVERY, PaymentStatus.PAID, "US", "United States", (13,)),
+    (3, OrderStatus.PENDING, PaymentStatus.PENDING, "US", "United States", (14, 6)),
+]
+
+
+def _line_items(products: list[Product], indices: tuple[int, ...], qty: int = 1) -> tuple[list[OrderItem], Decimal]:
+    items: list[OrderItem] = []
+    total = Decimal("0.00")
+    for idx in indices:
+        product = products[idx % len(products)]
+        unit = Decimal(product.price)
+        subtotal = unit * qty
+        total += subtotal
+        items.append(
+            OrderItem(
+                product_id=product.id,
+                quantity=qty,
+                unit_price=unit,
+                subtotal=subtotal,
+            )
+        )
+    return items, total
+
+
+def _add_order(
+    *,
+    customer: User,
+    products: list[Product],
+    product_indices: tuple[int, ...],
+    status: OrderStatus,
+    payment: PaymentStatus,
+    country: str,
+    country_name: str,
+    session_tag: str,
+) -> Order:
+    items, total = _line_items(products, product_indices)
+    if status != OrderStatus.CANCELLED:
+        for item in items:
+            product = next(p for p in products if p.id == item.product_id)
+            product.stock_quantity = max(0, product.stock_quantity - item.quantity)
+
+    order = Order(
+        customer_id=customer.id,
+        status=status,
+        payment_status=payment,
+        total_amount=total,
+        shipping_country=country,
+        shipping_country_name=country_name,
+        items=items,
+        stripe_checkout_session_id=session_tag,
+    )
+    if payment == PaymentStatus.PAID and status != OrderStatus.CANCELLED:
+        order.current_location = location_for_status(order, status)
+    return order
+
 
 def seed() -> None:
     db = SessionLocal()
     try:
         if db.query(Role).count() > 0:
             print("Database already seeded. Skipping.")
+            _print_ava_orders(db)
             return
 
         admin_role = Role(name="admin")
@@ -166,80 +246,43 @@ def seed() -> None:
             db.add(product)
         db.flush()
 
-        statuses = [
-            OrderStatus.PENDING,
-            OrderStatus.CONFIRMED,
-            OrderStatus.PROCESSING,
-            OrderStatus.DISPATCHED,
-            OrderStatus.OUT_FOR_DELIVERY,
-            OrderStatus.IN_TRANSIT_INTERNATIONAL,
-            OrderStatus.CUSTOMS_CLEARANCE,
-            OrderStatus.DELIVERED,
-            OrderStatus.CANCELLED,
+        ava = customers[0]
+        harbor_dock_idx = next(i for i, p in enumerate(products) if p.name == "Harbor Dock Station")
+
+        # Ava scenario orders first → OP-10001 … OP-10005 on a fresh DB.
+        ava_product_sets = [
+            (harbor_dock_idx,),
+            (harbor_dock_idx, 1),
+            (0, 9),
+            (12,),
+            (7, 10),
         ]
-        shipping_destinations = [
-            ("US", "United States"),
-            ("US", "United States"),
-            ("CA", "Canada"),
-            ("GB", "United Kingdom"),
-            ("DE", "Germany"),
-            ("AU", "Australia"),
-        ]
-
-        for i in range(15):
-            customer = random.choice(customers)
-            selected = random.sample(products, k=random.randint(1, 3))
-            items: list[OrderItem] = []
-            total = Decimal("0.00")
-            for product in selected:
-                qty = random.randint(1, 2)
-                unit = Decimal(product.price)
-                subtotal = unit * qty
-                total += subtotal
-                items.append(
-                    OrderItem(
-                        product_id=product.id,
-                        quantity=qty,
-                        unit_price=unit,
-                        subtotal=subtotal,
-                    )
-                )
-                if statuses[i % len(statuses)] != OrderStatus.CANCELLED:
-                    product.stock_quantity = max(0, product.stock_quantity - qty)
-
-            status = statuses[i % len(statuses)]
-            # International-only statuses use a non-US destination.
-            if status in {
-                OrderStatus.IN_TRANSIT_INTERNATIONAL,
-                OrderStatus.CUSTOMS_CLEARANCE,
-            }:
-                country_code, country_name = random.choice(
-                    [d for d in shipping_destinations if d[0] != "US"]
-                )
-            elif status in {OrderStatus.DISPATCHED, OrderStatus.OUT_FOR_DELIVERY} and i % 2:
-                country_code, country_name = ("US", "United States")
-            else:
-                country_code, country_name = shipping_destinations[i % len(shipping_destinations)]
-
-            payment = (
-                PaymentStatus.PAID
-                if status not in {OrderStatus.PENDING, OrderStatus.CANCELLED}
-                else PaymentStatus.PENDING
-                if status == OrderStatus.PENDING
-                else PaymentStatus.FAILED
-            )
-            order = Order(
-                customer_id=customer.id,
+        for i, ((status, payment, country, country_name, _note), idxs) in enumerate(
+            zip(AVA_SCENARIO_ORDERS, ava_product_sets)
+        ):
+            order = _add_order(
+                customer=ava,
+                products=products,
+                product_indices=idxs,
                 status=status,
-                payment_status=payment,
-                total_amount=total,
-                shipping_country=country_code,
-                shipping_country_name=country_name,
-                items=items,
-                stripe_checkout_session_id=f"cs_test_seed_{i+1}",
+                payment=payment,
+                country=country,
+                country_name=country_name,
+                session_tag=f"cs_test_seed_ava_{i + 1}",
             )
-            if payment == PaymentStatus.PAID and status != OrderStatus.CANCELLED:
-                order.current_location = location_for_status(order, status)
+            db.add(order)
+
+        for i, (cust_i, status, payment, country, country_name, idxs) in enumerate(OTHER_ORDERS):
+            order = _add_order(
+                customer=customers[cust_i],
+                products=products,
+                product_indices=idxs,
+                status=status,
+                payment=payment,
+                country=country,
+                country_name=country_name,
+                session_tag=f"cs_test_seed_other_{i + 1}",
+            )
             db.add(order)
 
         db.add(
@@ -248,7 +291,11 @@ def seed() -> None:
                 action="system.seeded",
                 entity_type="system",
                 entity_id="seed",
-                metadata_json={"products": len(products), "customers": len(customers)},
+                metadata_json={
+                    "products": len(products),
+                    "customers": len(customers),
+                    "deterministic": True,
+                },
             )
         )
         for user in customers:
@@ -263,14 +310,39 @@ def seed() -> None:
             )
 
         db.commit()
-        print("Seed complete.")
+        print("Seed complete (deterministic demo data).")
         print(f"  Admin:    {settings.seed_admin_email} / {settings.seed_admin_password}")
         print(f"  Customer: {CUSTOMERS[0][2]} / {settings.seed_customer_password}")
+        _print_ava_orders(db)
+        print("  Ben Harbor (privacy TC09): ben.harbor@harbordock.demo")
     except Exception:
         db.rollback()
         raise
     finally:
         db.close()
+
+
+def _print_ava_orders(db) -> None:
+    ava = db.query(User).filter(User.email == CUSTOMERS[0][2]).first()
+    if not ava:
+        return
+    orders = (
+        db.query(Order)
+        .filter(Order.customer_id == ava.id)
+        .order_by(Order.id.asc())
+        .all()
+    )
+    if not orders:
+        print("  Ava has no orders yet.")
+        return
+    print("  Ava North demo orders:")
+    notes = [n for *_, n in AVA_SCENARIO_ORDERS]
+    for i, order in enumerate(orders):
+        note = notes[i] if i < len(notes) else "extra"
+        print(
+            f"    {order.display_id}  status={order.status.value}  "
+            f"payment={order.payment_status.value}  ({note})"
+        )
 
 
 if __name__ == "__main__":

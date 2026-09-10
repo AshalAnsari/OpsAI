@@ -59,6 +59,34 @@ def message_confirms_cancel(message: str) -> bool:
     return any(p.search(text) for p in _CONFIRM_CANCEL_PATTERNS)
 
 
+_AMBIGUOUS_CANCEL_PATTERNS = [
+    re.compile(r"^\s*(please\s+)?cancel(\s+it)?\s*[!.?]?\s*$", re.I),
+    re.compile(r"^\s*(please\s+)?cancel\s+my\s+order\s*[!.?]?\s*$", re.I),
+]
+
+
+def _message_has_order_ref(text: str) -> bool:
+    if re.search(r"\bOP-\d+\b", text, flags=re.IGNORECASE):
+        return True
+    if re.search(r"#\s*\d+\b", text):
+        return True
+    if re.search(r"\border\s+#?\s*\d+\b", text, flags=re.IGNORECASE):
+        return True
+    return False
+
+
+def is_ambiguous_cancel_request(message: str) -> bool:
+    """True when cancel is requested with no order id (BR04) — do not reuse last-order hint."""
+    text = (message or "").strip()
+    if not text:
+        return False
+    if _message_has_order_ref(text):
+        return False
+    if message_confirms_cancel(text):
+        return False
+    return any(p.match(text) for p in _AMBIGUOUS_CANCEL_PATTERNS)
+
+
 CROSS_CUSTOMER_REFUSAL = (
     "I can’t show another customer’s order details. "
     "For privacy, I can only access orders on your own Harbor Dock Station account. "

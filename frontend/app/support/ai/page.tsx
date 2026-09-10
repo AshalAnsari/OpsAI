@@ -76,8 +76,13 @@ function AISupportContent() {
         message,
         confirm_cancel: confirmCancel,
       };
-      // Keep last order so "yes / I confirm cancel" or the checkbox can finish TC02.
-      if (lastOrderId) {
+      // Only reuse last order for confirm-cancel — not for ambiguous "cancel it" (BR04).
+      const looksLikeConfirm =
+        confirmCancel ||
+        /^\s*(yes|confirm)\b/i.test(message) ||
+        /\bi\s+confirm\b/i.test(message) ||
+        /\byes,?\s*confirm\s+cancel\b/i.test(message);
+      if (lastOrderId && looksLikeConfirm) {
         payload.order_id_hint = lastOrderId;
       }
 

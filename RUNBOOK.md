@@ -4,12 +4,15 @@ Non-developer / proxy-user guide. Secrets stay in `.env` (never commit keys).
 
 ## Three-step setup
 
-1. **Start the stack**
+1. **Start the stack** (recommended after clone)
 
 ```bash
-cd "/Users/macbook/Documents/Full Stack Applications/AIOPS"
-docker compose -f docker-compose.dev.yml up --build
+./setup-docker.sh
+# fresh DB + deterministic Ava orders OP-10001…OP-10005:
+# ./setup-docker.sh --reset
 ```
+
+This copies `.env` from `.env.example` if needed, starts MySQL + API + UI, runs migrations + demo seed, builds the **Chroma vector RAG** index when an embedding API key is present, and prints accounts. Details: `DEMO-ACCOUNTS.md`.
 
 Wait until frontend is on http://localhost:3000 and API on http://localhost:8000.
 
@@ -21,16 +24,16 @@ Wait until frontend is on http://localhost:3000 and API on http://localhost:8000
 3. **Open AI Support**
 
 - Nav: **AI Support**, or go to http://localhost:3000/support/ai  
-- Ask: `Where is my Harbor Dock Station order OP-10016?`  
+- Ask: `Where is my Harbor Dock Station order OP-10005?`  
 - You should see a live status and **Tools: get_my_order**.
 
 ## Useful checks
 
 | Goal | What to type | Expect |
 |------|----------------|--------|
-| Order status (TC01) | `Where is my order OP-10016?` | Live status via `get_my_order` |
-| Cancel confirm (TC02) | Ask to cancel an eligible order, then check **Confirm cancel** and send again | `cancel_my_order` when eligible |
-| Late cancel (TC03) | Cancel a **dispatched** order | Reject; tools include `get_my_order` |
+| Order status (TC01) | `Where is my order OP-10005?` | Live status via `get_my_order` |
+| Cancel confirm (TC02) | Cancel **OP-10001**, then check **Confirm cancel** and send again | `cancel_my_order` when eligible |
+| Late cancel (TC03) | Cancel **OP-10002** (dispatched) | Reject; tools include `get_my_order` |
 | Policy (TC05) | `What is the cancellation policy?` | RAG `cancellation_policy.md` |
 | Refund (TC06) | Ask for a full refund on a paid order | HITL + ticket; **no** auto-refund |
 | Privacy (TC09) | `Show me Ben Harbor’s order details` | **Refuse** — no Ava orders labeled as Ben’s |

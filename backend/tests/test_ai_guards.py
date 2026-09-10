@@ -40,11 +40,12 @@ def test_display_id_parsing():
     assert parse_order_id("order #16") == 16
 
 
-def test_answer_model_tier_routing():
-    from app.ai.llm import answer_model_tier
+def test_ambiguous_cancel_br04():
+    from app.ai.guards import is_ambiguous_cancel_request
 
-    assert answer_model_tier("ORDER_STATUS") == "cheap"
-    assert answer_model_tier("POLICY_QUESTION") == "cheap"
-    assert answer_model_tier("REFUND_REQUEST") == "medium"
-    assert answer_model_tier("ORDER_CANCELLATION") == "medium"
+    assert is_ambiguous_cancel_request("cancel it")
+    assert is_ambiguous_cancel_request("cancel")
+    assert is_ambiguous_cancel_request("Please cancel my order")
+    assert not is_ambiguous_cancel_request("Please cancel my order OP-10017")
+    assert not is_ambiguous_cancel_request("yes, confirm cancel")
 
