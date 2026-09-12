@@ -43,7 +43,9 @@ Wait until frontend is on http://localhost:3000 and API on http://localhost:8000
 - Login `admin@harbordock.demo` / `AdminDemo123!`  
 - **Support** → open tickets titled `AI escalation: …`
 
-## Admin evaluation baseline
+## Admin evaluation UIs
+
+### Baseline comparison
 
 View Manual vs Pure LLM vs AI OS comparison (headline scores, capability matrix, cost posture):
 
@@ -53,6 +55,17 @@ View Manual vs Pure LLM vs AI OS comparison (headline scores, capability matrix,
 3. Non-admins cannot view this page (redirect to login or customer dashboard)
 
 Source doc: `evaluation/BASELINE-COMPARISON.md`.
+
+### TC & BR case list
+
+View the full suite (TC01–TC10 + BR01–BR05) with prompts, expected behavior, observed responses, tools, and latency:
+
+1. Login as admin  
+2. Open http://localhost:3000/evaluation/cases  
+   - **Not** in the admin navbar — type the URL, or use **Open TC & BR case list** on the baseline page  
+3. Filter with tabs: All / Test cases (TC) / Break cases (BR)
+
+Source docs: `evaluation/test_case.txt`, `evaluation/BREAK-CASES-DAY4.md`, `evaluation/results-ai-os-day4.json`.
 
 ## Required env for AI
 

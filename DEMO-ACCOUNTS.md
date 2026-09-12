@@ -14,13 +14,14 @@ Other seeded customers (`cora.quill@…` … `hugo.lumen@…`) use the same cust
 
 ### Admin console URLs
 
-| Page | URL |
-|------|-----|
-| Overview | http://localhost:3000/admin |
-| Support tickets (HITL) | http://localhost:3000/admin/support |
-| **AI evaluation baseline** | http://localhost:3000/admin/evaluation |
+| Page | URL | In admin nav? |
+|------|-----|---------------|
+| Overview | http://localhost:3000/admin | Yes |
+| Support tickets (HITL) | http://localhost:3000/admin/support | Yes |
+| **AI evaluation baseline** | http://localhost:3000/admin/evaluation | Yes (**Evaluation**) |
+| **TC & BR case list** | http://localhost:3000/evaluation/cases | **No** — direct URL only |
 
-Evaluation is **admin-only** (login required). Customers and guests cannot open it.
+Both evaluation pages are **admin-only** (login required). Customers and guests cannot open them. From the baseline page you can also open **Open TC & BR case list**.
 
 ## Ava North orders (fresh database)
 

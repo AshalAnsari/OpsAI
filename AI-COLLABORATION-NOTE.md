@@ -31,7 +31,7 @@
 ## 3. How AI-generated results were verified
 
 - Ran TC01–TC10 and Day 4 break cases in the live UI as Ava / Admin  
-- Compared outputs to `evaluation/test_case.txt` expected bullets  
+- Compared outputs to `evaluation/test_case.txt` expected bullets (also browsable at `/evaluation/cases` for admins)  
 - Unit tests for guards / parsing / model-tier routing (`backend/tests/test_ai_guards.py`)  
 - Confirmed RBAC: tools use customer JWT; cross-customer asks refuse  
 - Confirmed refunds open tickets and never claim Stripe success  

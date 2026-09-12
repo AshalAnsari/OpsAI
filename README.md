@@ -16,6 +16,7 @@ All branding, customers, products, and credentials are synthetic.
 
 - App: http://localhost:3000 · AI Support: http://localhost:3000/support/ai  
 - Admin evaluation (baseline): http://localhost:3000/admin/evaluation *(admin login required)*  
+- Admin TC & BR case list: http://localhost:3000/evaluation/cases *(admin login; direct URL only — not in admin nav)*  
 - Accounts & orders: **`DEMO-ACCOUNTS.md`** · Non-dev steps: **`RUNBOOK.md`**  
 - Add `OPENROUTER_API_KEY` to `.env` for AI Support (script creates `.env` from `.env.example` if missing).
 
@@ -25,7 +26,7 @@ All branding, customers, products, and credentials are synthetic.
 
 Customers can register, browse products, place demo orders (Stripe sandbox / local demo checkout), and track order status.
 
-Admins can manage products, inspect customers/orders, update fulfillment status, review audit logs, and open the **AI baseline comparison** (`/admin/evaluation`) from an operations console.
+Admins can manage products, inspect customers/orders, update fulfillment status, review audit logs, and open the **AI baseline comparison** (`/admin/evaluation`) from an operations console. The full **TC01–TC10 + BR01–BR05** case list (prompts, expected behavior, observed responses) is at `/evaluation/cases` — admin login required, direct URL only (not in the admin navbar).
 
 ---
 
@@ -256,14 +257,21 @@ LangGraph AI OS Mini for support ops: live order tools + policy RAG + HITL ticke
 - Non-developer steps: see **`RUNBOOK.md`** (three-step setup)  
 - Requires `OPENROUTER_API_KEY` in `.env` (see `.env.example`)
 
-### Admin: evaluation baseline UI
+### Admin: evaluation UIs
 
-Manual vs Pure LLM vs AI OS scores and capability matrix (from `evaluation/BASELINE-COMPARISON.md`).
+**Baseline comparison** — Manual vs Pure LLM vs AI OS scores and capability matrix (from `evaluation/BASELINE-COMPARISON.md`).
 
 - URL: http://localhost:3000/admin/evaluation  
 - Access: **admin role only** (`RequireAuth` — guests go to login; customers redirect to `/dashboard`)  
 - Also: admin nav **Evaluation**, or Overview → **Open baseline**  
 - Login: `admin@harbordock.demo` / `AdminDemo123!` (see **`DEMO-ACCOUNTS.md`**)
+
+**TC & BR case list** — prompts, expected bullets, observed responses, tools, and latency for TC01–TC10 and Day 4 break cases BR01–BR05 (from `evaluation/test_case.txt`, `BREAK-CASES-DAY4.md`, `results-ai-os-day4.json`).
+
+- URL: http://localhost:3000/evaluation/cases  
+- Access: **admin role only** (same as baseline)  
+- **Not** in the admin navbar — type the URL, or use **Open TC & BR case list** on the baseline page  
+- Source data lives in `frontend/lib/evaluation-cases.ts`
 
 ---
 

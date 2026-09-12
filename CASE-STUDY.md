@@ -141,4 +141,5 @@ See `evaluation/BASELINE-COMPARISON.md` and `evaluation/FAILURE-RCA.md`.
 
 See **`RUNBOOK.md`** (three steps), **`./setup-docker.sh`**, and **`DEMO-ACCOUNTS.md`**.  
 AI Support: http://localhost:3000/support/ai after `./setup-docker.sh` (use `--reset` for fresh Ava orders OP-10001…OP-10005).  
-Admin baseline UI: http://localhost:3000/admin/evaluation (login `admin@harbordock.demo` — mirrors `evaluation/BASELINE-COMPARISON.md`).
+Admin baseline UI: http://localhost:3000/admin/evaluation (login `admin@harbordock.demo` — mirrors `evaluation/BASELINE-COMPARISON.md`).  
+TC & BR case list (direct URL, not in admin nav): http://localhost:3000/evaluation/cases — prompts, expected behavior, and Day 4 observed responses for TC01–TC10 and BR01–BR05.
