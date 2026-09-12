@@ -18,6 +18,7 @@ from langgraph.graph import END, START, StateGraph
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from app.ai.chat_history import format_context_for_prompt
 from app.ai.guards import (
     CROSS_CUSTOMER_REFUSAL,
     is_ambiguous_cancel_request,
@@ -36,11 +37,11 @@ logger = logging.getLogger("harbordock.ai")
 CLASSIFY_PROMPT = """
 You are Harbor Dock Station support triage.
 
-From the customer message only, classify:
+From the latest customer message (and recent chat history when useful), classify:
 - intent: ORDER_STATUS | ORDER_CANCELLATION | PAYMENT_STATUS | REFUND_REQUEST | POLICY_QUESTION | DELIVERY_ISSUE | ORDER_CHANGE | GENERAL_SUPPORT | UNAUTHORIZED_ACCESS
 - risk_level: READ | LOW_RISK_WRITE | HIGH_RISK
 - summary: short summary
-- order_id: integer if clearly present. Harbor Dock Station display ids are OP-10xxx:
+- order_id: integer if clearly present in the latest message or recent history. Harbor Dock Station display ids are OP-10xxx:
   OP-10015 / #10015 / 10015 → 15; bare #18 → 18. Prefer the numeric DB id in this field.
 
 Guidance:
@@ -53,6 +54,7 @@ Guidance:
 - change address after ship → ORDER_CHANGE, READ (reject/explain; not automatic ticket)
 - warranty / unknown → POLICY_QUESTION or GENERAL_SUPPORT, READ
 - asking for another customer's / Ben Harbor's orders → UNAUTHORIZED_ACCESS, READ
+- Short confirmations like "yes" / "I confirm cancel" after a cancel ask → ORDER_CANCELLATION; reuse order_id from history when clear.
 
 Do not answer the customer here; only classify.
 """
@@ -68,7 +70,7 @@ Rules:
 - If policy context says information is unavailable (e.g. lifetime warranty), say so. Do not invent a warranty.
 - For REFUND_REQUEST: never claim a refund was processed. Say a human must approve.
 - If ticket_information shows a created ticket, tell the customer the ticket display_id was already opened — do NOT ask them to open another ticket.
-- For ORDER_CANCELLATION: if cancel was executed (action_taken=cancel), confirm success with the new status. If eligible but not yet cancelled, ask them to confirm by either (1) checking Confirm cancel and sending again, or (2) replying "yes, confirm cancel" / "I confirm cancel" with the same order id — do NOT open a support ticket for a normal eligible cancel. If not eligible (dispatched/delivered), explain why — do not pretend a cancel happened. If no order id is present and tool results only list multiple orders (or ask for id), ask which order to cancel — do not assume a previous order.
+- For ORDER_CANCELLATION: if cancel was executed (action_taken=cancel), confirm success with the new status. If eligible but not yet cancelled, ask them to confirm by replying "yes, confirm cancel" / "I confirm cancel" with the same order id — do NOT open a support ticket for a normal eligible cancel. If not eligible (dispatched/delivered), explain why — do not pretend a cancel happened. If no order id is present and tool results only list multiple orders (or ask for id), ask which order to cancel — do not assume a previous order unless recent chat history clearly identified one.
 - For ORDER_CHANGE on a dispatched order: clearly refuse; do not imply a refund was filed unless a ticket was actually created.
 - Prefer display_id (OP-…) when referring to orders.
 - Tool results for get_my_orders are ALWAYS the current user's orders only — never rename them as another person's.
@@ -129,10 +131,15 @@ def build_support_graph(db: Session, customer: User):
                 "ticket_information": "",
             }
 
+        history_block = format_context_for_prompt(list(state.get("chat_history") or []))
+        classify_human = (
+            f"Chat context (latest up to 10 messages, chronological):\n{history_block}\n\n"
+            f"Classify based on the latest customer message (last Customer line above)."
+        )
         result = classify_model.with_structured_output(ClassifyResult).invoke(
             [
                 SystemMessage(content=CLASSIFY_PROMPT),
-                HumanMessage(content=user_message),
+                HumanMessage(content=classify_human),
             ]
         )
         parsed = parse_order_id(user_message, result.order_id)
@@ -348,12 +355,16 @@ def build_support_graph(db: Session, customer: User):
         if state.get("authorization_denied"):
             return {"generated_answer": CROSS_CUSTOMER_REFUSAL}
 
-        human_content = f"""Customer message: {state.get("user_message")}
+        history_block = format_context_for_prompt(list(state.get("chat_history") or []))
+        human_content = f"""Chat context (latest up to 10 messages, chronological):
+{history_block}
+
+Latest customer message: {state.get("user_message")}
 Intent: {state.get("intent")}
 Risk level: {state.get("risk_level")}
 Summary: {state.get("summary")}
 Order id: {state.get("order_id")}
-Confirm cancel flag: {state.get("confirm_cancel")}
+Confirm cancel (natural language or flag): {state.get("confirm_cancel")}
 Action taken: {state.get("action_taken")}
 Authorization denied: {state.get("authorization_denied")}
 Requires approval: {state.get("requires_approval")}

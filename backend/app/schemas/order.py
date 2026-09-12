@@ -13,6 +13,11 @@ class OrderItemCreate(BaseModel):
 
 class OrderCreateRequest(BaseModel):
     items: list[OrderItemCreate] = Field(min_length=1)
+    shipping_address_line1: str = Field(min_length=3, max_length=200)
+    shipping_address_line2: str | None = Field(default=None, max_length=200)
+    shipping_city: str = Field(min_length=2, max_length=100)
+    shipping_state: str | None = Field(default=None, max_length=100)
+    shipping_postal_code: str = Field(min_length=2, max_length=20)
     shipping_country: str = Field(min_length=2, max_length=2)
     shipping_country_name: str | None = Field(default=None, max_length=100)
 
@@ -23,6 +28,29 @@ class OrderCreateRequest(BaseModel):
         if len(cleaned) != 2 or not cleaned.isalpha():
             raise ValueError("shipping_country must be a 2-letter country code")
         return cleaned
+
+    @field_validator("shipping_address_line1", "shipping_city", "shipping_postal_code")
+    @classmethod
+    def strip_required(cls, value: str) -> str:
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("This field is required")
+        return cleaned
+
+    @field_validator(
+        "shipping_address_line2",
+        "shipping_state",
+        "shipping_country_name",
+        mode="before",
+    )
+    @classmethod
+    def strip_optional_text(cls, value: object) -> object:
+        if value is None:
+            return None
+        if isinstance(value, str):
+            cleaned = value.strip()
+            return cleaned or None
+        return value
 
 
 class OrderItemResponse(BaseModel):
@@ -43,6 +71,11 @@ class OrderResponse(BaseModel):
     status: OrderStatus
     payment_status: PaymentStatus
     total_amount: Decimal
+    shipping_address_line1: str | None = None
+    shipping_address_line2: str | None = None
+    shipping_city: str | None = None
+    shipping_state: str | None = None
+    shipping_postal_code: str | None = None
     shipping_country: str
     shipping_country_name: str | None = None
     current_location: str | None = None

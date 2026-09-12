@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { api } from "@/lib/api";
 import { formatDate } from "@/lib/format";
@@ -13,6 +12,7 @@ export function NotificationBell() {
   const [unread, setUnread] = useState(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const rootRef = useRef<HTMLDivElement>(null);
 
   const load = useCallback(async (nextPage = 1) => {
     const [list, count] = await Promise.all([
@@ -36,6 +36,32 @@ export function NotificationBell() {
     return () => clearInterval(timer);
   }, [load, page]);
 
+  useEffect(() => {
+    if (!open) return;
+
+    function onPointerDown(event: MouseEvent | TouchEvent) {
+      const root = rootRef.current;
+      if (!root) return;
+      const target = event.target as Node | null;
+      if (target && !root.contains(target)) {
+        setOpen(false);
+      }
+    }
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("touchstart", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("touchstart", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
   async function markRead(id: number, link?: string | null) {
     await api.post(`/api/v1/notifications/${id}/read`);
     await load(page);
@@ -43,7 +69,7 @@ export function NotificationBell() {
   }
 
   return (
-    <div className="relative">
+    <div className="relative" ref={rootRef}>
       <button
         type="button"
         className="relative inline-flex h-10 w-10 items-center justify-center rounded-md border border-[var(--line)] bg-transparent text-[var(--ink)] transition hover:bg-[var(--paper-deep)]"
@@ -51,6 +77,7 @@ export function NotificationBell() {
           setOpen((v) => !v);
           void load(1);
         }}
+        aria-expanded={open}
         aria-label={unread > 0 ? `Notifications, ${unread} unread` : "Notifications"}
       >
         <svg
@@ -125,9 +152,6 @@ export function NotificationBell() {
               </button>
             </div>
           )}
-          <Link href="/support" className="mt-2 block text-center text-xs text-[var(--accent)]">
-            Contact support
-          </Link>
         </div>
       )}
     </div>

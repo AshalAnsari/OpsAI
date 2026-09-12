@@ -6,7 +6,7 @@ import { RequireAuth } from "@/components/auth/RequireAuth";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Pagination } from "@/components/ui/Pagination";
 import { api, ApiClientError } from "@/lib/api";
-import { ALL_ORDER_STATUSES, formatDate, formatMoney, formatStatusLabel } from "@/lib/format";
+import { ALL_ORDER_STATUSES, formatDate, formatMoney, formatShippingAddress, formatStatusLabel } from "@/lib/format";
 import type { FulfillmentAdvanceResult, Order, OrderStatus, Paginated } from "@/lib/types";
 
 function transitionsFor(order: Order): OrderStatus[] {
@@ -59,6 +59,16 @@ function AdminOrdersContent() {
       setTotalPages(data.total_pages);
       setTotal(data.total);
       setError(null);
+
+      if (data.items.length === 0) {
+        setSelected(null);
+        return;
+      }
+
+      const keepCurrent = selected && data.items.some((order) => order.id === selected.id);
+      const idToOpen = keepCurrent && selected ? selected.id : data.items[0].id;
+      const order = await api.get<Order>(`/api/v1/admin/orders/${idToOpen}`);
+      setSelected(order);
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : "Failed to load orders.");
     }
@@ -102,9 +112,6 @@ function AdminOrdersContent() {
       const result = await api.post<FulfillmentAdvanceResult>("/api/v1/admin/fulfillment/advance-day");
       setMessage(result.message);
       await load();
-      if (selected) {
-        await openOrder(selected.id);
-      }
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : "Unable to advance fulfillment.");
     } finally {
@@ -155,12 +162,15 @@ function AdminOrdersContent() {
       {error && <p className="text-sm text-rose-700">{error}</p>}
       {message && <p className="text-sm text-[var(--accent)]">{message}</p>}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
+      <div className="grid items-start gap-6 lg:grid-cols-[1fr_1fr]">
         <div className="space-y-3">
           {orders.map((order) => (
             <button
               key={order.id}
-              className="surface w-full rounded-2xl p-4 text-left"
+              type="button"
+              className={`surface w-full rounded-2xl p-4 text-left ${
+                selected?.id === order.id ? "ring-2 ring-[var(--accent)]" : ""
+              }`}
               onClick={() => void openOrder(order.id)}
             >
               <div className="flex items-center justify-between gap-3">
@@ -182,12 +192,12 @@ function AdminOrdersContent() {
           <Pagination page={page} totalPages={totalPages} total={total} onPageChange={(p) => void load(p)} />
         </div>
 
-        <div className="surface rounded-2xl p-6">
+        <div className="surface sticky top-24 flex h-[calc(100vh-8rem)] flex-col overflow-hidden rounded-2xl p-6">
           {!selected ? (
             <p className="text-[var(--ink-soft)]">Select an order to view details.</p>
           ) : (
-            <div className="space-y-4">
-              <div>
+            <div className="flex min-h-0 flex-1 flex-col gap-4">
+              <div className="shrink-0">
                 <h2 className="font-display text-3xl">{selected.display_id}</h2>
                 <p className="mt-1 text-sm text-[var(--ink-soft)]">
                   {selected.customer_name} · {selected.customer_email}
@@ -197,27 +207,32 @@ function AdminOrdersContent() {
                   <StatusBadge status={selected.payment_status} label="Payment" />
                 </div>
               </div>
-              <div className="text-sm text-[var(--ink-soft)]">
-                <p>
-                  Ship to: {selected.shipping_country_name || selected.shipping_country} (
-                  {selected.shipping_country})
-                </p>
-                <p className="mt-1">Location: {selected.current_location || "—"}</p>
+              <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+                <div className="text-sm text-[var(--ink-soft)]">
+                  <p className="font-medium text-[var(--ink)]">Ship to</p>
+                  <p className="mt-1 whitespace-pre-line">{formatShippingAddress(selected)}</p>
+                  <p className="mt-3">Location: {selected.current_location || "—"}</p>
+                </div>
+                <div className="space-y-2">
+                  {selected.items.map((item) => (
+                    <div key={item.id} className="flex justify-between text-sm">
+                      <span>
+                        {item.product_name} × {item.quantity}
+                      </span>
+                      <span>{formatMoney(item.subtotal)}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-lg font-semibold">Total {formatMoney(selected.total_amount)}</p>
               </div>
-              <div className="space-y-2">
-                {selected.items.map((item) => (
-                  <div key={item.id} className="flex justify-between text-sm">
-                    <span>
-                      {item.product_name} × {item.quantity}
-                    </span>
-                    <span>{formatMoney(item.subtotal)}</span>
-                  </div>
-                ))}
-              </div>
-              <p className="text-lg font-semibold">Total {formatMoney(selected.total_amount)}</p>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex shrink-0 flex-wrap gap-2 border-t border-[var(--line)] pt-3">
                 {nextStatuses.map((next) => (
-                  <button key={next} className="btn btn-secondary" onClick={() => void changeStatus(next)}>
+                  <button
+                    key={next}
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => void changeStatus(next)}
+                  >
                     Mark {formatStatusLabel(next)}
                   </button>
                 ))}

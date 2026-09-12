@@ -8,7 +8,7 @@ import { OrderTimeline } from "@/components/orders/OrderTimeline";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useCart } from "@/hooks/useCart";
 import { api, ApiClientError } from "@/lib/api";
-import { formatDate, formatMoney } from "@/lib/format";
+import { formatDate, formatMoney, formatShippingAddress } from "@/lib/format";
 import type { CartItem, Order } from "@/lib/types";
 
 export default function OrderDetailPage() {
@@ -131,9 +131,7 @@ function OrderDetailContent() {
       <div className="surface grid gap-4 rounded-2xl p-5 sm:grid-cols-2">
         <div>
           <p className="text-sm text-[var(--ink-soft)]">Ship to</p>
-          <p className="mt-1 font-medium">
-            {order.shipping_country_name || order.shipping_country} ({order.shipping_country})
-          </p>
+          <p className="mt-1 whitespace-pre-line font-medium">{formatShippingAddress(order)}</p>
         </div>
         <div>
           <p className="text-sm text-[var(--ink-soft)]">Current location</p>

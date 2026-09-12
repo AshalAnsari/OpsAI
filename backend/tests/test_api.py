@@ -1,9 +1,19 @@
 from tests.conftest import auth_header
 
 
-def _order_payload(product_id: int = 1, quantity: int = 1, country: str = "US", name: str = "United States"):
+def _order_payload(
+    product_id: int = 1,
+    quantity: int = 1,
+    country: str = "US",
+    name: str = "United States",
+):
     return {
         "items": [{"product_id": product_id, "quantity": quantity}],
+        "shipping_address_line1": "12 Harbor Lane",
+        "shipping_address_line2": "Apt 4B",
+        "shipping_city": "Brooklyn",
+        "shipping_state": "NY",
+        "shipping_postal_code": "11201",
         "shipping_country": country,
         "shipping_country_name": name,
     }
@@ -61,6 +71,8 @@ def test_order_creation_stock_and_idor(client):
     assert order["total_amount"] == "80.00"
     assert order["items"][0]["unit_price"] == "40.00"
     assert order["shipping_country"] == "US"
+    assert order["shipping_address_line1"] == "12 Harbor Lane"
+    assert order["shipping_city"] == "Brooklyn"
     assert create.json()["data"]["checkout_url"]
 
     products_after = client.get("/api/v1/products").json()["data"]["items"]
@@ -81,6 +93,14 @@ def test_order_requires_shipping_country(client):
         headers=headers,
         json={"items": [{"product_id": 1, "quantity": 1}]},
     )
+    assert response.status_code == 422
+
+
+def test_order_requires_shipping_address(client):
+    headers = auth_header(client, "ava.north@harbordock.demo", "CustomerDemo123!")
+    payload = _order_payload(1, 1)
+    del payload["shipping_address_line1"]
+    response = client.post("/api/v1/orders", headers=headers, json=payload)
     assert response.status_code == 422
 
 
@@ -204,6 +224,10 @@ def test_fulfillment_advance_domestic_and_international(client, db_session):
         status=OrderStatus.DISPATCHED,
         payment_status=PaymentStatus.PAID,
         total_amount=40,
+        shipping_address_line1="12 Harbor Lane",
+        shipping_city="Brooklyn",
+        shipping_state="NY",
+        shipping_postal_code="11201",
         shipping_country="US",
         shipping_country_name="United States",
         current_location="Left New York, NY, USA",
@@ -215,6 +239,10 @@ def test_fulfillment_advance_domestic_and_international(client, db_session):
         status=OrderStatus.DISPATCHED,
         payment_status=PaymentStatus.PAID,
         total_amount=40,
+        shipping_address_line1="88 Maple Street",
+        shipping_city="Toronto",
+        shipping_state="ON",
+        shipping_postal_code="M5V 2T6",
         shipping_country="CA",
         shipping_country_name="Canada",
         current_location="Left New York, NY, USA",

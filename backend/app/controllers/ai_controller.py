@@ -30,6 +30,7 @@ def ai_support_chat(
         db,
         current_user,
         payload.message,
+        session_id=payload.session_id,
         confirm_cancel=payload.confirm_cancel,
         order_id_hint=payload.order_id_hint,
     )

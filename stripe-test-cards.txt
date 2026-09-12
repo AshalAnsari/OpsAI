@@ -1,0 +1,3 @@
+stripe test card(success): 4242 4242 4242 4242
+stripe test card(decline): 4000 0000 0000 0002
+stripe test card(Requires auth (3DS)): 4000 0025 0000 3155

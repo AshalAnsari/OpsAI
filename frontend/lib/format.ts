@@ -15,6 +15,35 @@ export function formatDate(value: string): string {
   }).format(new Date(value));
 }
 
+export function formatShippingAddress(order: {
+  shipping_address_line1?: string | null;
+  shipping_address_line2?: string | null;
+  shipping_city?: string | null;
+  shipping_state?: string | null;
+  shipping_postal_code?: string | null;
+  shipping_country?: string | null;
+  shipping_country_name?: string | null;
+}): string {
+  const lines: string[] = [];
+  if (order.shipping_address_line1) lines.push(order.shipping_address_line1);
+  if (order.shipping_address_line2) lines.push(order.shipping_address_line2);
+
+  const cityLine = [order.shipping_city, order.shipping_state, order.shipping_postal_code]
+    .filter(Boolean)
+    .join(", ");
+  if (cityLine) lines.push(cityLine);
+
+  const country = order.shipping_country_name || order.shipping_country;
+  if (country) {
+    lines.push(
+      order.shipping_country && order.shipping_country_name
+        ? `${order.shipping_country_name} (${order.shipping_country})`
+        : country,
+    );
+  }
+  return lines.join("\n") || "—";
+}
+
 export function formatStatusLabel(status: string): string {
   return status.replaceAll("_", " ");
 }

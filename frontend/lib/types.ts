@@ -52,6 +52,11 @@ export type Order = {
   status: OrderStatus;
   payment_status: PaymentStatus;
   total_amount: string | number;
+  shipping_address_line1?: string | null;
+  shipping_address_line2?: string | null;
+  shipping_city?: string | null;
+  shipping_state?: string | null;
+  shipping_postal_code?: string | null;
   shipping_country: string;
   shipping_country_name?: string | null;
   current_location?: string | null;

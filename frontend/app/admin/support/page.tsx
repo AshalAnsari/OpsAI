@@ -69,12 +69,24 @@ function AdminSupportContent() {
 
   async function setStatus(status: SupportTicket["status"]) {
     if (!selected) return;
-    const data = await api.patch<SupportTicket>(
-      `/api/v1/admin/support/tickets/${selected.id}/status`,
-      { status },
-    );
-    setSelected(data);
-    await load(page);
+    setError(null);
+    try {
+      const data = await api.patch<SupportTicket>(
+        `/api/v1/admin/support/tickets/${selected.id}/status`,
+        { status },
+      );
+      setSelected(data);
+      setMessage(
+        status === "closed"
+          ? `Ticket ${data.display_id} closed.`
+          : status === "resolved"
+            ? `Ticket ${data.display_id} marked resolved.`
+            : `Ticket ${data.display_id} status updated.`,
+      );
+      await load(page);
+    } catch (err) {
+      setError(err instanceof ApiClientError ? err.message : "Status update failed.");
+    }
   }
 
   return (
@@ -88,18 +100,24 @@ function AdminSupportContent() {
       {error && <p className="text-sm text-rose-700">{error}</p>}
       {message && <p className="text-sm text-[var(--accent)]">{message}</p>}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
+      <div className="grid items-start gap-6 lg:grid-cols-[1fr_1.1fr]">
         <div className="space-y-3">
           {tickets.map((ticket) => (
             <button
               key={ticket.id}
-              className="surface w-full rounded-2xl p-4 text-left"
+              type="button"
+              className={`surface w-full rounded-2xl p-4 text-left ${
+                selected?.id === ticket.id ? "ring-2 ring-[var(--accent)]" : ""
+              }`}
               onClick={() => void openTicket(ticket.id)}
             >
-              <p className="font-semibold">
-                {ticket.display_id} · {ticket.subject}
-              </p>
-              <p className="text-sm text-[var(--ink-soft)]">
+              <div className="flex items-start justify-between gap-2">
+                <p className="font-semibold">
+                  {ticket.display_id} · {ticket.subject}
+                </p>
+                <StatusBadge status={ticket.status} />
+              </div>
+              <p className="mt-1 text-sm text-[var(--ink-soft)]">
                 {ticket.customer_name} · {formatDate(ticket.updated_at)}
               </p>
             </button>
@@ -107,12 +125,12 @@ function AdminSupportContent() {
           <Pagination page={page} totalPages={totalPages} total={total} onPageChange={(p) => void load(p)} />
         </div>
 
-        <div className="surface rounded-2xl p-6">
+        <div className="surface sticky top-24 flex h-[calc(100vh-8rem)] flex-col overflow-hidden rounded-2xl p-6">
           {!selected ? (
             <p className="text-[var(--ink-soft)]">Select a ticket.</p>
           ) : (
-            <div className="space-y-4">
-              <div className="flex items-start justify-between gap-3">
+            <div className="flex min-h-0 flex-1 flex-col gap-4">
+              <div className="flex shrink-0 items-start justify-between gap-3">
                 <div>
                   <h2 className="font-display text-3xl">{selected.display_id}</h2>
                   <p className="mt-1">{selected.subject}</p>
@@ -120,9 +138,9 @@ function AdminSupportContent() {
                     {selected.customer_name} · {selected.customer_email}
                   </p>
                 </div>
-                <StatusBadge status="processing" />
+                <StatusBadge status={selected.status} />
               </div>
-              <div className="max-h-80 space-y-2 overflow-y-auto">
+              <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
                 {selected.messages.map((msg) => (
                   <div key={msg.id} className="rounded-xl border border-[var(--line)] px-3 py-2 text-sm">
                     <p className="text-xs text-[var(--ink-soft)]">
@@ -132,25 +150,37 @@ function AdminSupportContent() {
                   </div>
                 ))}
               </div>
-              <textarea
-                className="input min-h-24"
-                placeholder="Write a reply…"
-                value={reply}
-                onChange={(e) => setReply(e.target.value)}
-              />
-              <div className="flex flex-wrap gap-2">
-                <button className="btn btn-primary" onClick={() => void sendReply()}>
-                  Send reply + email
-                </button>
-                <button className="btn btn-secondary" onClick={() => void setStatus("resolved")}>
-                  Mark resolved
-                </button>
-                <button className="btn btn-secondary" onClick={() => void setStatus("closed")}>
-                  Close
-                </button>
-                <Link href={`/admin/customers`} className="btn btn-secondary">
-                  Customers
-                </Link>
+              <div className="shrink-0 space-y-3 border-t border-[var(--line)] pt-3">
+                <textarea
+                  className="input min-h-24"
+                  placeholder="Write a reply…"
+                  value={reply}
+                  onChange={(e) => setReply(e.target.value)}
+                />
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" className="btn btn-primary" onClick={() => void sendReply()}>
+                    Send reply + email
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    disabled={selected.status === "resolved"}
+                    onClick={() => void setStatus("resolved")}
+                  >
+                    Mark resolved
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    disabled={selected.status === "closed"}
+                    onClick={() => void setStatus("closed")}
+                  >
+                    Close
+                  </button>
+                  <Link href={`/admin/customers`} className="btn btn-secondary">
+                    Customers
+                  </Link>
+                </div>
               </div>
             </div>
           )}

@@ -170,6 +170,11 @@ def _add_order(
     country: str,
     country_name: str,
     session_tag: str,
+    address_line1: str = "12 Harbor Lane",
+    address_line2: str | None = "Apt 4B",
+    city: str = "Brooklyn",
+    state: str = "NY",
+    postal_code: str = "11201",
 ) -> Order:
     items, total = _line_items(products, product_indices)
     if status != OrderStatus.CANCELLED:
@@ -182,6 +187,11 @@ def _add_order(
         status=status,
         payment_status=payment,
         total_amount=total,
+        shipping_address_line1=address_line1,
+        shipping_address_line2=address_line2,
+        shipping_city=city,
+        shipping_state=state,
+        shipping_postal_code=postal_code,
         shipping_country=country,
         shipping_country_name=country_name,
         items=items,

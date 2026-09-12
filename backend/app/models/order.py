@@ -54,6 +54,11 @@ class Order(Base):
         index=True,
     )
     total_amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
+    shipping_address_line1: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    shipping_address_line2: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    shipping_city: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    shipping_state: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    shipping_postal_code: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     shipping_country: Mapped[str] = mapped_column(String(2), nullable=False, default="US")
     shipping_country_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     current_location: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)

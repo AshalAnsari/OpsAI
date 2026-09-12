@@ -23,6 +23,7 @@ class SupportState(TypedDict, total=False):
 
     user_message: str
     confirm_cancel: bool
+    chat_history: list[dict[str, Any]]
     intent: str
     risk_level: str
     summary: str

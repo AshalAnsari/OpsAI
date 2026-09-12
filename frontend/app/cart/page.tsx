@@ -22,6 +22,11 @@ function CartContent() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [shippingCountry, setShippingCountry] = useState("US");
+  const [addressLine1, setAddressLine1] = useState("");
+  const [addressLine2, setAddressLine2] = useState("");
+  const [city, setCity] = useState("");
+  const [stateRegion, setStateRegion] = useState("");
+  const [postalCode, setPostalCode] = useState("");
 
   const total = items.reduce(
     (sum, item) => sum + Number(item.product.price) * item.quantity,
@@ -39,6 +44,10 @@ function CartContent() {
       setError("Select a shipping country.");
       return;
     }
+    if (!addressLine1.trim() || !city.trim() || !postalCode.trim()) {
+      setError("Enter your street address, city, and postal code.");
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
@@ -51,6 +60,11 @@ function CartContent() {
           product_id: item.product.id,
           quantity: item.quantity,
         })),
+        shipping_address_line1: addressLine1.trim(),
+        shipping_address_line2: addressLine2.trim() || null,
+        shipping_city: city.trim(),
+        shipping_state: stateRegion.trim() || null,
+        shipping_postal_code: postalCode.trim(),
         shipping_country: shippingCountry,
         shipping_country_name: selectedCountry?.name,
       });
@@ -122,21 +136,97 @@ function CartContent() {
           <div className="surface rounded-2xl p-6">
             <h2 className="font-display text-2xl">Review order</h2>
             <p className="mt-4 text-3xl font-semibold">{formatMoney(total)}</p>
-            <div className="mt-4">
-              <label className="label">Ship to country</label>
-              <select
-                className="input"
-                value={shippingCountry}
-                onChange={(e) => setShippingCountry(e.target.value)}
-              >
-                {SHIPPING_COUNTRIES.map((country) => (
-                  <option key={country.code} value={country.code}>
-                    {country.name} ({country.code})
-                  </option>
-                ))}
-              </select>
-              <p className="mt-2 text-xs text-[var(--ink-soft)]">
-                Warehouse origin: New York, NY, USA. Non-US destinations include international transit and customs steps.
+            <div className="mt-4 space-y-3">
+              <div>
+                <label className="label" htmlFor="address-line1">
+                  Street address
+                </label>
+                <input
+                  id="address-line1"
+                  className="input"
+                  placeholder="123 Main Street"
+                  value={addressLine1}
+                  onChange={(e) => setAddressLine1(e.target.value)}
+                  autoComplete="shipping address-line1"
+                />
+              </div>
+              <div>
+                <label className="label" htmlFor="address-line2">
+                  Apt, suite, etc. (optional)
+                </label>
+                <input
+                  id="address-line2"
+                  className="input"
+                  placeholder="Apt 4B"
+                  value={addressLine2}
+                  onChange={(e) => setAddressLine2(e.target.value)}
+                  autoComplete="shipping address-line2"
+                />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="label" htmlFor="city">
+                    City
+                  </label>
+                  <input
+                    id="city"
+                    className="input"
+                    placeholder="Brooklyn"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    autoComplete="shipping address-level2"
+                  />
+                </div>
+                <div>
+                  <label className="label" htmlFor="state">
+                    State / region
+                  </label>
+                  <input
+                    id="state"
+                    className="input"
+                    placeholder="NY"
+                    value={stateRegion}
+                    onChange={(e) => setStateRegion(e.target.value)}
+                    autoComplete="shipping address-level1"
+                  />
+                </div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="label" htmlFor="postal">
+                    Postal code
+                  </label>
+                  <input
+                    id="postal"
+                    className="input"
+                    placeholder="11201"
+                    value={postalCode}
+                    onChange={(e) => setPostalCode(e.target.value)}
+                    autoComplete="shipping postal-code"
+                  />
+                </div>
+                <div>
+                  <label className="label" htmlFor="country">
+                    Country
+                  </label>
+                  <select
+                    id="country"
+                    className="input"
+                    value={shippingCountry}
+                    onChange={(e) => setShippingCountry(e.target.value)}
+                    autoComplete="shipping country"
+                  >
+                    {SHIPPING_COUNTRIES.map((country) => (
+                      <option key={country.code} value={country.code}>
+                        {country.name} ({country.code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <p className="text-xs text-[var(--ink-soft)]">
+                Warehouse origin: New York, NY, USA. Non-US destinations include international transit and
+                customs steps.
               </p>
             </div>
             <p className="mt-2 text-sm text-[var(--ink-soft)]">Stripe sandbox checkout required to confirm.</p>
