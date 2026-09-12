@@ -54,3 +54,46 @@ def test_format_context():
     )
     assert "Customer: Cancel OP-10015" in text
     assert "Assistant: Please confirm cancel" in text
+
+
+def test_usage_totals_on_assistant_meta():
+    session = ch.ensure_session(3)
+    assert session["usage_totals"]["total_tokens"] == 0
+
+    ch.append_turn(session, role="user", content="Where is my order?")
+    ch.append_turn(
+        session,
+        role="assistant",
+        content="Pending",
+        meta={
+            "usage": {
+                "prompt_tokens": 100,
+                "completion_tokens": 20,
+                "total_tokens": 120,
+                "llm_calls": 2,
+            }
+        },
+    )
+    ch.append_turn(
+        session,
+        role="assistant",
+        content="Still pending",
+        meta={
+            "usage": {
+                "prompt_tokens": 50,
+                "completion_tokens": 10,
+                "total_tokens": 60,
+                "llm_calls": 1,
+            }
+        },
+    )
+
+    loaded = ch.load_session(3, session["session_id"])
+    assert loaded is not None
+    assert loaded["usage_totals"] == {
+        "prompt_tokens": 150,
+        "completion_tokens": 30,
+        "total_tokens": 180,
+        "llm_calls": 3,
+    }
+    assert loaded["messages"][-1]["meta"]["usage"]["total_tokens"] == 60

@@ -21,13 +21,22 @@ from sqlalchemy.orm import Session
 from app.ai.chat_history import format_context_for_prompt
 from app.ai.guards import (
     CROSS_CUSTOMER_REFUSAL,
+    OFF_TOPIC_REFUSAL,
     is_ambiguous_cancel_request,
     is_cross_customer_request,
+    is_off_topic_request,
     looks_like_cancellation,
     looks_like_prompt_injection,
     message_confirms_cancel,
 )
-from app.ai.llm import answer_model_tier, get_chat_model
+from app.ai.llm import (
+    MAX_TOKENS_CLASSIFY,
+    answer_max_tokens,
+    answer_model_tier,
+    empty_turn_usage,
+    get_chat_model,
+    invoke_structured,
+)
 from app.ai.state import SupportState
 from app.ai.tools import HarborTools, parse_order_id
 from app.models.role import User
@@ -38,7 +47,7 @@ CLASSIFY_PROMPT = """
 You are Harbor Dock Station support triage.
 
 From the latest customer message (and recent chat history when useful), classify:
-- intent: ORDER_STATUS | ORDER_CANCELLATION | PAYMENT_STATUS | REFUND_REQUEST | POLICY_QUESTION | DELIVERY_ISSUE | ORDER_CHANGE | GENERAL_SUPPORT | UNAUTHORIZED_ACCESS
+- intent: ORDER_STATUS | ORDER_CANCELLATION | PAYMENT_STATUS | REFUND_REQUEST | POLICY_QUESTION | DELIVERY_ISSUE | ORDER_CHANGE | GENERAL_SUPPORT | UNAUTHORIZED_ACCESS | OFF_TOPIC
 - risk_level: READ | LOW_RISK_WRITE | HIGH_RISK
 - summary: short summary
 - order_id: integer if clearly present in the latest message or recent history. Harbor Dock Station display ids are OP-10xxx:
@@ -52,9 +61,10 @@ Guidance:
 - cancellation/refund/shipping policy questions (no specific order action) → POLICY_QUESTION, READ
 - delivered but missing → DELIVERY_ISSUE, HIGH_RISK
 - change address after ship → ORDER_CHANGE, READ (reject/explain; not automatic ticket)
-- warranty / unknown → POLICY_QUESTION or GENERAL_SUPPORT, READ
+- warranty / unknown product-support → POLICY_QUESTION or GENERAL_SUPPORT, READ
 - asking for another customer's / Ben Harbor's orders → UNAUTHORIZED_ACCESS, READ
 - Short confirmations like "yes" / "I confirm cancel" after a cancel ask → ORDER_CANCELLATION; reuse order_id from history when clear.
+- Math, trivia, jokes, weather, coding help, or anything unrelated to Harbor Dock orders/policies → OFF_TOPIC, READ
 
 Do not answer the customer here; only classify.
 """
@@ -66,6 +76,7 @@ Write a clear, professional reply using ONLY tool_results, ticket_information, a
 Rules:
 - Do not invent order status, location, payment state, policies, warranties, or refunds.
 - If authorization_denied is true, refuse clearly: you can only access the logged-in customer's orders. Do not list any orders as belonging to another person.
+- If off_topic is true, refuse: you only help with Harbor Dock orders and policies — do not solve math, trivia, or unrelated tasks.
 - If a tool error says order not found, say you could not find that order for this account.
 - If policy context says information is unavailable (e.g. lifetime warranty), say so. Do not invent a warranty.
 - For REFUND_REQUEST: never claim a refund was processed. Say a human must approve.
@@ -90,6 +101,7 @@ class ClassifyResult(BaseModel):
         "ORDER_CHANGE",
         "GENERAL_SUPPORT",
         "UNAUTHORIZED_ACCESS",
+        "OFF_TOPIC",
     ]
     risk_level: Literal["READ", "LOW_RISK_WRITE", "HIGH_RISK"]
     summary: str = Field(description="Short summary of the customer issue")
@@ -107,7 +119,7 @@ def _cancellable_status(status: str | None) -> bool:
 def build_support_graph(db: Session, customer: User):
     tools = HarborTools(db, customer)
     # Classification is structured and short → cheaper model (cost control).
-    classify_model = get_chat_model("cheap")
+    classify_model = get_chat_model("cheap", max_tokens=MAX_TOKENS_CLASSIFY)
 
     def classify(state: SupportState) -> dict[str, Any]:
         user_message = state["user_message"]
@@ -120,6 +132,7 @@ def build_support_graph(db: Session, customer: User):
                 "summary": "Request for another customer's order data",
                 "order_id": None,
                 "authorization_denied": True,
+                "off_topic": False,
                 "tools_called": [],
                 "tool_results": [],
                 "citations": [],
@@ -129,6 +142,28 @@ def build_support_graph(db: Session, customer: User):
                 "needs_escalation": False,
                 "requires_approval": False,
                 "ticket_information": "",
+                "llm_usage": empty_turn_usage(),
+            }
+
+        # Off-topic (math/trivia/etc.) — no LLM, no RAG.
+        if is_off_topic_request(user_message):
+            return {
+                "intent": "OFF_TOPIC",
+                "risk_level": "READ",
+                "summary": "Off-topic request outside Harbor Dock support",
+                "order_id": None,
+                "authorization_denied": False,
+                "off_topic": True,
+                "tools_called": [],
+                "tool_results": [],
+                "citations": [],
+                "action_taken": "none",
+                "error": "off_topic_denied",
+                "retrieved_information": "",
+                "needs_escalation": False,
+                "requires_approval": False,
+                "ticket_information": "",
+                "llm_usage": empty_turn_usage(),
             }
 
         history_block = format_context_for_prompt(list(state.get("chat_history") or []))
@@ -136,11 +171,16 @@ def build_support_graph(db: Session, customer: User):
             f"Chat context (latest up to 10 messages, chronological):\n{history_block}\n\n"
             f"Classify based on the latest customer message (last Customer line above)."
         )
-        result = classify_model.with_structured_output(ClassifyResult).invoke(
+        result, llm_usage = invoke_structured(
+            classify_model,
+            ClassifyResult,
             [
                 SystemMessage(content=CLASSIFY_PROMPT),
                 HumanMessage(content=classify_human),
-            ]
+            ],
+            tier="cheap",
+            call="classify",
+            prior_usage=empty_turn_usage(),
         )
         parsed = parse_order_id(user_message, result.order_id)
         # Reuse client order_id_hint only when safe (TC02 confirm). Never on ambiguous "cancel it" (BR04).
@@ -161,6 +201,7 @@ def build_support_graph(db: Session, customer: User):
             "POLICY_QUESTION",
             "GENERAL_SUPPORT",
             "ORDER_STATUS",
+            "OFF_TOPIC",
         }:
             intent = "ORDER_CANCELLATION"
             risk = "LOW_RISK_WRITE"
@@ -181,19 +222,28 @@ def build_support_graph(db: Session, customer: User):
             intent = "REFUND_REQUEST"
             risk = "HIGH_RISK"
 
+        # Classifier may still mark trivia as GENERAL_SUPPORT — force OFF_TOPIC.
+        if intent == "OFF_TOPIC" or is_off_topic_request(user_message):
+            intent = "OFF_TOPIC"
+            risk = "READ"
+
+        off_topic = intent == "OFF_TOPIC"
+
         return {
             "intent": intent,
             "risk_level": risk,
-            "summary": result.summary,
-            "order_id": parsed,
+            "summary": result.summary if not off_topic else "Off-topic request outside Harbor Dock support",
+            "order_id": parsed if not off_topic else None,
             "authorization_denied": intent == "UNAUTHORIZED_ACCESS",
+            "off_topic": off_topic,
             "tools_called": [],
             "tool_results": [],
             "citations": [],
             "action_taken": "none",
-            "error": "",
+            "error": "off_topic_denied" if off_topic else "",
             "retrieved_information": "",
             "ticket_information": "",
+            "llm_usage": llm_usage,
         }
 
     def run_tools(state: SupportState) -> dict[str, Any]:
@@ -214,6 +264,24 @@ def build_support_graph(db: Session, customer: User):
                 "action_taken": "none",
                 "error": "cross_customer_denied",
                 "authorization_denied": True,
+            }
+
+        if state.get("off_topic") or intent == "OFF_TOPIC":
+            return {
+                "tools_called": [],
+                "tool_results": [
+                    {
+                        "ok": False,
+                        "tool": "off_topic_guard",
+                        "error_code": "OFF_TOPIC",
+                        "error": OFF_TOPIC_REFUSAL,
+                    }
+                ],
+                "retrieved_information": "",
+                "citations": [],
+                "action_taken": "none",
+                "error": "off_topic_denied",
+                "off_topic": True,
             }
 
         order_id = state.get("order_id")
@@ -311,7 +379,7 @@ def build_support_graph(db: Session, customer: User):
         }
 
     def determine_escalation(state: SupportState) -> dict[str, Any]:
-        if state.get("authorization_denied"):
+        if state.get("authorization_denied") or state.get("off_topic"):
             return {"needs_escalation": False, "requires_approval": False}
 
         intent = state.get("intent")
@@ -353,7 +421,15 @@ def build_support_graph(db: Session, customer: User):
 
     def generate_answer(state: SupportState) -> dict[str, Any]:
         if state.get("authorization_denied"):
-            return {"generated_answer": CROSS_CUSTOMER_REFUSAL}
+            return {
+                "generated_answer": CROSS_CUSTOMER_REFUSAL,
+                "llm_usage": state.get("llm_usage") or empty_turn_usage(),
+            }
+        if state.get("off_topic") or state.get("intent") == "OFF_TOPIC":
+            return {
+                "generated_answer": OFF_TOPIC_REFUSAL,
+                "llm_usage": state.get("llm_usage") or empty_turn_usage(),
+            }
 
         history_block = format_context_for_prompt(list(state.get("chat_history") or []))
         human_content = f"""Chat context (latest up to 10 messages, chronological):
@@ -367,6 +443,7 @@ Order id: {state.get("order_id")}
 Confirm cancel (natural language or flag): {state.get("confirm_cancel")}
 Action taken: {state.get("action_taken")}
 Authorization denied: {state.get("authorization_denied")}
+Off topic: {state.get("off_topic")}
 Requires approval: {state.get("requires_approval")}
 Needs escalation: {state.get("needs_escalation")}
 Tool error note: {state.get("error")}
@@ -381,14 +458,19 @@ Policy context:
 {state.get("retrieved_information") or "(none)"}
 """
         tier = answer_model_tier(str(state.get("intent") or ""))
-        answer_model = get_chat_model(tier)
-        result = answer_model.with_structured_output(AnswerResult).invoke(
+        answer_model = get_chat_model(tier, max_tokens=answer_max_tokens(tier))
+        result, llm_usage = invoke_structured(
+            answer_model,
+            AnswerResult,
             [
                 SystemMessage(content=ANSWER_PROMPT),
                 HumanMessage(content=human_content),
-            ]
+            ],
+            tier=tier,
+            call="answer",
+            prior_usage=state.get("llm_usage") or empty_turn_usage(),
         )
-        return {"generated_answer": result.generated_answer}
+        return {"generated_answer": result.generated_answer, "llm_usage": llm_usage}
 
     def route_escalation(state: SupportState):
         if state.get("needs_escalation"):

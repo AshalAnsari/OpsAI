@@ -1,6 +1,6 @@
 # Harbor Dock Station — Operational SaaS Demo Platform
 
-Harbor Dock Station is a **fictional** operational commerce SaaS: customers browse products, place demo orders, and track fulfillment; admins run catalog, orders, support, and audit from an operations console.
+Harbor Dock Station is a **fictional** operational commerce SaaS: customers browse products, place demo orders, and track fulfillment; admins run catalog, orders, support, audit, and **AI evaluation** from an operations console.
 
 The platform exposes REST APIs that an AI assistant layer can call as controlled tools — never the database directly.
 
@@ -15,6 +15,7 @@ All branding, customers, products, and credentials are synthetic.
 ```
 
 - App: http://localhost:3000 · AI Support: http://localhost:3000/support/ai  
+- Admin evaluation (baseline): http://localhost:3000/admin/evaluation *(admin login required)*  
 - Accounts & orders: **`DEMO-ACCOUNTS.md`** · Non-dev steps: **`RUNBOOK.md`**  
 - Add `OPENROUTER_API_KEY` to `.env` for AI Support (script creates `.env` from `.env.example` if missing).
 
@@ -24,7 +25,7 @@ All branding, customers, products, and credentials are synthetic.
 
 Customers can register, browse products, place demo orders (Stripe sandbox / local demo checkout), and track order status.
 
-Admins can manage products, inspect customers/orders, update fulfillment status, and review audit logs from an operations console.
+Admins can manage products, inspect customers/orders, update fulfillment status, review audit logs, and open the **AI baseline comparison** (`/admin/evaluation`) from an operations console.
 
 ---
 
@@ -254,6 +255,15 @@ LangGraph AI OS Mini for support ops: live order tools + policy RAG + HITL ticke
 - API: `POST /api/v1/ai/support/chat`  
 - Non-developer steps: see **`RUNBOOK.md`** (three-step setup)  
 - Requires `OPENROUTER_API_KEY` in `.env` (see `.env.example`)
+
+### Admin: evaluation baseline UI
+
+Manual vs Pure LLM vs AI OS scores and capability matrix (from `evaluation/BASELINE-COMPARISON.md`).
+
+- URL: http://localhost:3000/admin/evaluation  
+- Access: **admin role only** (`RequireAuth` — guests go to login; customers redirect to `/dashboard`)  
+- Also: admin nav **Evaluation**, or Overview → **Open baseline**  
+- Login: `admin@harbordock.demo` / `AdminDemo123!` (see **`DEMO-ACCOUNTS.md`**)
 
 ---
 

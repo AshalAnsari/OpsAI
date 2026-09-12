@@ -12,6 +12,16 @@ Synthetic credentials for local / grader testing. Safe to share in the repo.
 
 Other seeded customers (`cora.quill@…` … `hugo.lumen@…`) use the same customer password.
 
+### Admin console URLs
+
+| Page | URL |
+|------|-----|
+| Overview | http://localhost:3000/admin |
+| Support tickets (HITL) | http://localhost:3000/admin/support |
+| **AI evaluation baseline** | http://localhost:3000/admin/evaluation |
+
+Evaluation is **admin-only** (login required). Customers and guests cannot open it.
+
 ## Ava North orders (fresh database)
 
 Created by `python -m scripts.seed` on first backend boot (or after `./setup-docker.sh --reset`):

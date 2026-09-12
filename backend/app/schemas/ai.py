@@ -1,3 +1,5 @@
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 
@@ -27,3 +29,4 @@ class AISupportChatResponse(BaseModel):
     ticket_information: str = ""
     trace_id: str
     latency_ms: int
+    usage: dict[str, Any] | None = None

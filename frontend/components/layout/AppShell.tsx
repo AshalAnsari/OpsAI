@@ -24,6 +24,7 @@ const adminLinks = [
   { href: "/admin/customers", label: "Customers" },
   { href: "/admin/support", label: "Support" },
   { href: "/admin/audit-logs", label: "Audit" },
+  { href: "/admin/evaluation", label: "Evaluation" },
   { href: "/policies", label: "Policies" },
 ];
 
@@ -51,19 +52,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </Link>
           <nav className="hidden items-center gap-4 lg:flex">
             {user &&
-              links.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`text-sm font-medium ${
-                    pathname === link.href || pathname.startsWith(`${link.href}/`)
-                      ? "text-[var(--accent)]"
-                      : "text-[var(--ink-soft)]"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              ))}
+              links.map((link) => {
+                const active =
+                  link.href === "/admin"
+                    ? pathname === "/admin"
+                    : pathname === link.href || pathname.startsWith(`${link.href}/`);
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={`text-sm font-medium ${
+                      active ? "text-[var(--accent)]" : "text-[var(--ink-soft)]"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
             {!user && !loading && (
               <Link
                 href="/policies"

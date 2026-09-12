@@ -50,6 +50,12 @@ def _empty_session(user_id: int, session_id: str) -> dict[str, Any]:
         "created_at": now,
         "updated_at": now,
         "messages": [],
+        "usage_totals": {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "total_tokens": 0,
+            "llm_calls": 0,
+        },
     }
 
 
@@ -96,6 +102,28 @@ def save_session(data: dict[str, Any]) -> Path:
     return path
 
 
+def bump_usage_totals(data: dict[str, Any], usage: dict[str, Any] | None) -> dict[str, Any]:
+    """Accumulate prompt/completion tokens on the session root for cost reporting."""
+    if not usage:
+        return data
+    totals = data.get("usage_totals")
+    if not isinstance(totals, dict):
+        totals = {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "total_tokens": 0,
+            "llm_calls": 0,
+        }
+    totals["prompt_tokens"] = int(totals.get("prompt_tokens") or 0) + int(usage.get("prompt_tokens") or 0)
+    totals["completion_tokens"] = int(totals.get("completion_tokens") or 0) + int(
+        usage.get("completion_tokens") or 0
+    )
+    totals["total_tokens"] = int(totals.get("total_tokens") or 0) + int(usage.get("total_tokens") or 0)
+    totals["llm_calls"] = int(totals.get("llm_calls") or 0) + int(usage.get("llm_calls") or 0)
+    data["usage_totals"] = totals
+    return data
+
+
 def append_turn(
     data: dict[str, Any],
     *,
@@ -111,6 +139,9 @@ def append_turn(
     }
     if meta:
         entry["meta"] = meta
+        usage = meta.get("usage")
+        if isinstance(usage, dict):
+            bump_usage_totals(data, usage)
     messages.append(entry)
     data["messages"] = messages
     save_session(data)

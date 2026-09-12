@@ -13,6 +13,7 @@ Intent = Literal[
     "ORDER_CHANGE",
     "GENERAL_SUPPORT",
     "UNAUTHORIZED_ACCESS",
+    "OFF_TOPIC",
 ]
 
 RiskLevel = Literal["READ", "LOW_RISK_WRITE", "HIGH_RISK"]
@@ -39,3 +40,6 @@ class SupportState(TypedDict, total=False):
     action_taken: str
     error: str
     authorization_denied: bool
+    off_topic: bool
+    # Per-turn LLM token usage (classify + answer); see app.ai.llm.empty_turn_usage()
+    llm_usage: dict[str, Any]

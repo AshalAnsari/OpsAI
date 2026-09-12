@@ -92,3 +92,48 @@ CROSS_CUSTOMER_REFUSAL = (
     "For privacy, I can only access orders on your own Harbor Dock Station account. "
     "If you need help with one of your orders, send the order number (for example OP-10016)."
 )
+
+# Obvious non-support asks (math, trivia, entertainment). Support keywords win.
+_SUPPORT_HINT_PATTERNS = [
+    re.compile(
+        r"\b(order|orders|cancel|cancellation|refund|shipping|shipped|delivery|delivered|"
+        r"payment|paid|pending|policy|policies|ticket|account|password|login|warranty|"
+        r"return|address|tracking|fulfillment|invoice|checkout|cart|product|products)\b",
+        re.I,
+    ),
+    re.compile(r"\bOP-\d+\b", re.I),
+    re.compile(r"\bharbor\s+dock\b", re.I),
+]
+
+_OFF_TOPIC_PATTERNS = [
+    re.compile(r"\b\d+\s*[+\-×x*/÷]\s*\d+\b", re.I),
+    re.compile(r"\bwhat\s+is\s+\d+\s*[+\-×x*/÷]", re.I),
+    re.compile(r"\b(calculate|solve|math|equation)\b", re.I),
+    re.compile(r"\b(tell\s+me\s+a\s+joke|write\s+(me\s+)?a\s+(poem|story|song))\b", re.I),
+    re.compile(r"\b(weather|forecast|stock\s+price|bitcoin|capital\s+of)\b", re.I),
+    re.compile(r"\bwho\s+(won|is\s+the\s+president|invented)\b", re.I),
+    re.compile(r"\b(translate\s+this|code\s+a|write\s+python)\b", re.I),
+]
+
+
+def looks_like_support_related(message: str) -> bool:
+    text = message or ""
+    return any(p.search(text) for p in _SUPPORT_HINT_PATTERNS)
+
+
+def is_off_topic_request(message: str) -> bool:
+    """True for clear non-support asks (e.g. math). Support wording always wins."""
+    text = (message or "").strip()
+    if not text:
+        return False
+    if looks_like_support_related(text):
+        return False
+    return any(p.search(text) for p in _OFF_TOPIC_PATTERNS)
+
+
+OFF_TOPIC_REFUSAL = (
+    "I’m Harbor Dock Station AI Support — I only help with your orders, payments, "
+    "shipping, cancellations, refunds, and company policies. "
+    "I can’t answer general questions (for example math or trivia). "
+    "Send an order id like OP-10016, ask about a policy, or open a classic support ticket for a human."
+)

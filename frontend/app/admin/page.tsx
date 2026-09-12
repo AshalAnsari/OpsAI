@@ -140,6 +140,20 @@ function AdminDashboardContent() {
           ))}
         </div>
       </section>
+
+      <section className="surface rounded-2xl p-6">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h2 className="font-display text-2xl">AI evaluation</h2>
+            <p className="mt-1 text-sm text-[var(--ink-soft)]">
+              Manual vs Pure LLM vs AI OS baseline scores and capability matrix.
+            </p>
+          </div>
+          <Link href="/admin/evaluation" className="btn btn-secondary shrink-0">
+            Open baseline
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }

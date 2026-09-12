@@ -43,6 +43,17 @@ Wait until frontend is on http://localhost:3000 and API on http://localhost:8000
 - Login `admin@harbordock.demo` / `AdminDemo123!`  
 - **Support** → open tickets titled `AI escalation: …`
 
+## Admin evaluation baseline
+
+View Manual vs Pure LLM vs AI OS comparison (headline scores, capability matrix, cost posture):
+
+1. Login as admin (same credentials as above)  
+2. Open http://localhost:3000/admin/evaluation  
+   - Or nav **Evaluation**, or Overview → **Open baseline**  
+3. Non-admins cannot view this page (redirect to login or customer dashboard)
+
+Source doc: `evaluation/BASELINE-COMPARISON.md`.
+
 ## Required env for AI
 
 In `.env` (see `.env.example`):

@@ -49,3 +49,17 @@ def test_ambiguous_cancel_br04():
     assert not is_ambiguous_cancel_request("Please cancel my order OP-10017")
     assert not is_ambiguous_cancel_request("yes, confirm cancel")
 
+
+def test_off_topic_math_and_trivia():
+    from app.ai.guards import is_off_topic_request, looks_like_support_related
+
+    assert is_off_topic_request("what is 12 + 12?")
+    assert is_off_topic_request("What is 12+12")
+    assert is_off_topic_request("tell me a joke")
+    assert is_off_topic_request("capital of France")
+    assert not is_off_topic_request("Where is my order OP-10016?")
+    assert not is_off_topic_request("What is the cancellation policy?")
+    assert not is_off_topic_request("cancel order 12 + shipping question")  # support hint wins
+    assert looks_like_support_related("refund my payment")
+    assert not looks_like_support_related("what is 12 + 12?")
+

@@ -14,6 +14,7 @@ from app.ai.chat_history import (
     last_order_id_from_history,
 )
 from app.ai.graph import build_support_graph
+from app.ai.llm import empty_turn_usage
 from app.models.role import User
 from app.utils.exceptions import AppError
 
@@ -62,6 +63,7 @@ def run_support_turn(
             "action_taken": "none",
             "retrieved_information": "",
             "error": "",
+            "llm_usage": empty_turn_usage(),
         }
         result = app.invoke(initial)
     except RuntimeError as exc:
@@ -78,6 +80,7 @@ def run_support_turn(
 
     latency_ms = int((time.perf_counter() - started) * 1000)
     reply = result.get("generated_answer") or "I could not generate a reply."
+    usage = result.get("llm_usage") or empty_turn_usage()
     meta = {
         "intent": result.get("intent"),
         "tools_called": result.get("tools_called") or [],
@@ -88,16 +91,22 @@ def run_support_turn(
         "order_id": result.get("order_id"),
         "latency_ms": latency_ms,
         "trace_id": trace_id,
+        "usage": usage,
     }
     append_turn(session, role="assistant", content=reply, meta=meta)
 
     logger.info(
-        "AI turn trace_id=%s session=%s intent=%s tools=%s latency_ms=%s customer_id=%s",
+        "AI turn trace_id=%s session=%s intent=%s tools=%s latency_ms=%s "
+        "prompt_tokens=%s completion_tokens=%s total_tokens=%s llm_calls=%s customer_id=%s",
         trace_id,
         sid,
         result.get("intent"),
         result.get("tools_called"),
         latency_ms,
+        usage.get("prompt_tokens"),
+        usage.get("completion_tokens"),
+        usage.get("total_tokens"),
+        usage.get("llm_calls"),
         customer.id,
     )
 
@@ -116,4 +125,5 @@ def run_support_turn(
         "ticket_information": result.get("ticket_information") or "",
         "trace_id": trace_id,
         "latency_ms": latency_ms,
+        "usage": usage,
     }

@@ -6,6 +6,25 @@ import { FormEvent, useState } from "react";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { api, ApiClientError } from "@/lib/api";
 
+type TokenUsage = {
+  classify?: {
+    model?: string;
+    prompt_tokens?: number;
+    completion_tokens?: number;
+    total_tokens?: number;
+  } | null;
+  answer?: {
+    model?: string;
+    prompt_tokens?: number;
+    completion_tokens?: number;
+    total_tokens?: number;
+  } | null;
+  prompt_tokens?: number;
+  completion_tokens?: number;
+  total_tokens?: number;
+  llm_calls?: number;
+};
+
 type ChatTurn = {
   role: "user" | "assistant";
   content: string;
@@ -19,6 +38,7 @@ type ChatTurn = {
     order_id?: number | null;
     latency_ms?: number;
     trace_id?: string;
+    usage?: TokenUsage | null;
   };
 };
 
@@ -34,6 +54,7 @@ type AIChatData = {
   order_id?: number | null;
   latency_ms?: number;
   trace_id?: string;
+  usage?: TokenUsage | null;
 };
 
 export default function AISupportPage() {
@@ -110,6 +131,7 @@ function AISupportContent() {
             order_id: data.order_id,
             latency_ms: data.latency_ms,
             trace_id: data.trace_id,
+            usage: data.usage,
           },
         },
       ]);
@@ -176,6 +198,16 @@ function AISupportContent() {
                     <p>Action: {turn.meta.action_taken}</p>
                   )}
                   {typeof turn.meta.latency_ms === "number" && <p>Latency: {turn.meta.latency_ms} ms</p>}
+                  {turn.meta.usage && typeof turn.meta.usage.total_tokens === "number" && (
+                    <p>
+                      Tokens: {turn.meta.usage.prompt_tokens ?? 0} prompt +{" "}
+                      {turn.meta.usage.completion_tokens ?? 0} completion ={" "}
+                      {turn.meta.usage.total_tokens} total
+                      {typeof turn.meta.usage.llm_calls === "number"
+                        ? ` (${turn.meta.usage.llm_calls} LLM call${turn.meta.usage.llm_calls === 1 ? "" : "s"})`
+                        : ""}
+                    </p>
+                  )}
                 </div>
               )}
             </div>
